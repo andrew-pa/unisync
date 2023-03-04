@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage[colorlinks,urlcolor=blue]{hyperref}
+
+\setlength{\parskip}{1.0em}
+\setlength{\headsep}{0em}
+\setlength{\headheight}{0em}
+\setlength{\parindent}{0em}
+
+\pretitle{\noindent \LARGE}
+\posttitle{}
+\preauthor{\hfill}
+\postauthor{;\em}
+\predate{}
+\postdate{}
+
+\title{Project Proposal}
+\author{Andrew Palmer, Mark Roth}
+
+\begin{document}
+    \maketitle
+
+    \section{Problem Description}
+    Many applications are structured into client and server portions, separated by the Internet.
+    Typically these applications use some kind of remote procedure call protocol to communicate between the client and the server.
+    When you look at what many of these remote procedures actually accomplish, however, you quickly find that they are often dedicated to creating, reading, updating, and deleting resources on the server -- in effect, data synchronization.
+    Often these portions of the RPC interface start to become an architectural sinkhole, where they don't really do anything meaningful, only proxying data directly to and from the database.
+    As a result, they become a source of code bloat and unnecessary complexity that increases development time and makes it harder to add new features, but doesn't add any value to the system.
+    The worst case of this problem is where, baring security, you could just expose the database to the clients directly and it would make little difference to the server's provided functionality.
+
+    These fragile CRUD remote interfaces have another drawback that manifests on the client side.
+    The highly specific server interface tends to create very specific interactions around different resources in the client.
+    Over time this results in duplicated code as each type of resource ends up with its own ad-hoc synchronization mechanism.
+    This can develop into considerable complexity, as discussed by Facebook in their \href{https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/}{Project LightSpeed case study}, where among other anti-patterns, this managed to accumulate 1.7 million lines of code in the Facebook Messenger client.
+    Another problem with these ad-hoc data models in the client is that they tend to be fairly inflexible, making it harder to build rich user interfaces without duplicating views or to quickly iterate on new user interface designs.
+    Often in such systems adding a new user interface requires modifying the UI code, the inner client code that interfaces with the network, and adding new code to the server.
+
+
+        \subsection{Desirable Architectural Characteristics}
+            \subsubsection{Robustness}
+            \subsubsection{Scalability}
+            \subsubsection{Performance}
+
+    \section{Proposed Solution}
+    % Overview
+    Ideally we would be able to abstract this commonality out, allowing us to reuse the same service to manage data synchronization for many different applications.
+    Such a service would take care of keeping the data stored on the server and cached on the client in sync, while also retaining the ability to perform access control for data.
+    By doing so, we can also introduce a common client library that interfaces with this service, making building client applications far simpler.
+    % Diagram
+    % Work/time allocation
+
+    \section{What Will We Learn}
+
+\end{document}

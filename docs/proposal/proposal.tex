@@ -4,12 +4,20 @@
 \usepackage{enumitem}
 \usepackage{setspace}
 \usepackage{titling}
+\usepackage{titlesec}
 \usepackage[colorlinks,urlcolor=blue]{hyperref}
 
 \setlength{\parskip}{1.0em}
-\setlength{\headsep}{0em}
+\setlength{\headsep}{1em}
 \setlength{\headheight}{0em}
 \setlength{\parindent}{0em}
+
+\titlespacing*{\section}
+{0pt}{1em}{0pt}
+\titlespacing*{\subsection}
+{0pt}{0pt}{0pt}
+\titlespacing*{\subsubsection}
+{0pt}{0pt}{0pt}
 
 \pretitle{\noindent \LARGE}
 \posttitle{}
@@ -39,17 +47,23 @@
     Another problem with these ad-hoc data models in the client is that they tend to be fairly inflexible, making it harder to build rich user interfaces without duplicating views or to quickly iterate on new user interface designs.
     Often in such systems adding a new user interface requires modifying the UI code, the inner client code that interfaces with the network, and adding new code to the server.
 
-
         \subsection{Desirable Architectural Characteristics}
             \subsubsection{Robustness}
+            Robustness is critical for solving data synchronization. If data is corrupted due to errors, ...
             \subsubsection{Scalability}
+            Lots of users. Not as much data/user but still significant amount.
             \subsubsection{Performance}
+            Slow sync is no better than doing it by hand.
+            \subsubsection{Portability}
+            \subsubsection{Extensibility}
 
     \section{Proposed Solution}
     % Overview
-    Ideally we would be able to abstract this commonality out, allowing us to reuse the same service to manage data synchronization for many different applications.
-    Such a service would take care of keeping the data stored on the server and cached on the client in sync, while also retaining the ability to perform access control for data.
-    By doing so, we can also introduce a common client library that interfaces with this service, making building client applications far simpler.
+    We propose to create an abstract service that provides data synchronization, allowing us to reuse the same service to manage data synchronization for many different applications.
+    The service takes care of keeping the data stored on the server and cached on the client in sync, while also retaining the ability to perform access control for data.
+    We can also introduce a common client library that interfaces with this service, making building client applications far simpler and more uniform.
+    We can leverage this uniformity to introduce more powerful storage and retrieval mechanisms on the client.
+
     % Diagram
     % Work/time allocation
 

@@ -6,6 +6,9 @@
 \usepackage{titling}
 \usepackage{titlesec}
 \usepackage[colorlinks,urlcolor=blue]{hyperref}
+\usepackage[pdftex]{graphicx}
+\usepackage{pdfpages}
+\usepackage{multirow}
 
 \setlength{\parskip}{1.0em}
 \setlength{\headsep}{1em}
@@ -59,13 +62,21 @@
 
     \section{Proposed Solution}
     % Overview
-    We propose to create an abstract service that provides data synchronization, allowing us to reuse the same service to manage data synchronization for many different applications.
-    The service takes care of keeping the data stored on the server and cached on the client in sync, while also retaining the ability to perform access control for data.
-    We can also introduce a common client library that interfaces with this service, making building client applications far simpler and more uniform.
-    We can leverage this uniformity to introduce more powerful storage and retrieval mechanisms on the client.
+    We propose to create an abstract service that provides data synchronization (the "Sync Service"), allowing us to reuse the same service to manage data synchronization for many different applications.
+    The service takes care of keeping the data stored on the server and cached on the client in sync. It will also perform access control for data, making sure users only have access to their own data.
+    We can also introduce a common client library (the "Sync Client") that interfaces with the Sync Service, making building client applications far simpler and more uniform.
+    We can leverage this uniformity to introduce more powerful storage and retrieval mechanisms on the client, probably using the widely available SQLite database.
 
     % Diagram
-    % Work/time allocation
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\linewidth]{./diagrams.pdf}
+        \caption{A high level diagram of the proposed architecture}
+    \end{figure}
+
+    Ideally to demonstrate the versatility of our system, we will be able to write several (1-3) simple clients.
+    The focus of these clients will be demonstrating the system in different domains rather, so they won't have to be overcomplicated.
+    Hopefully we can even demonstrate different platforms reusing the same service and common client code.
 
     \section{What Will We Learn}
 

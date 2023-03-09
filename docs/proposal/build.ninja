@@ -1,0 +1,10 @@
+texflags = -shell-escape -recorder -interaction errorstopmode
+rule tex
+  command = pdflatex $texflags -output-directory=$outdir $in
+
+rule drawio
+  command = drawio --export --output $out --format pdf --crop --all-pages $in
+
+build ./.out/proposal.pdf: tex ./proposal.tex | ./.out/diagrams.pdf
+  outdir = ./.out
+build ./.out/diagrams.pdf: drawio ./diagrams.drawio

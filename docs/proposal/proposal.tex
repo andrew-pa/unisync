@@ -92,7 +92,7 @@
     The Sync Service will have a network interface that communicates with the common client library or Sync Client.
     The Sync Client will provide uniform data synchronization and access (via SQLite) across features in all clients.
     It will also provide an interface to the Identity Service.
-        The Sync Client will be provided as a library that can be shared between different client implementations.
+        The Sync Client will be provided as a library that can be shared between different client implementations, analogous to Project LightSpeed's MSYS package.
 
     The Identity Service will provide information about identity of users to the rest of the system, including user authentication and session management.
 
@@ -106,20 +106,15 @@
     Completing this project will allow us to try out this unique architecture.
     We will gain experience in a new architectural paradigm that we don’t have experience with and will allow us to compare it with architectures we have worked with in the past.
     From our previous experience with mobile development from projects in previous classes, we have a starting point and a point of contrast with other architectural styles commonly used in the field.
+    While there are similar components in other modern architectures, like using native components and a data driven user interface, the Project LightSpeed idea is unique because of its focus on reusable uniformity.
+    We also want to learn how to build reusable, unified systems like this.
+
     Like Meta's Project LightSpeed, we will build the app from the ground up, which will allow us to run in to some of the same hiccups and architectural decisions that they made along the way in their early days of prototyping.
     We hope to see firsthand why they decided there were enough architectural benefits to pursue this model from the ground up, instead of taking a more gradual evolutionary approach to a more “standard” app development architecture.
-
-    By rebuilding Facebook Messenger from the ground up, Meta did something relatively unique that isn’t commonly seen in software development.
-    They rebuilt their app entirely from scratch into a new architectural paradigm.
-    Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did.
-    While all architectural decisions involve tradeoffs a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
-    This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come, as the process of greenfield development is costly.
-    What makes this even more interesting is that in many ways the architecture that they decided on is relatively different from modern app development.
-    While there are similar components to other modern architectures, ie using native components and data driven UI, the implementation is unique, database synchronization and a nontraditional MVVM architecture.
-    They pushed reusability as far as they could to keep down the number of views and view controllers in a way that isn’t commonly seen in the industry currently.
-    While many companies are organizing apps and breaking teams down into domains, Meta is grouping more and more items into each domain to keep the app lightweight, essentially creating more of a monolith in the interest of code reusability.
-    They also focused on their MSYS system that created a standardized way of data access and synchronization, which allowed them to reuse even more code.
-
+    Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did, because complete rewrites are expensive.
+    While all architectural decisions involve tradeoffs, a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
+    This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come.
+    We want to find out if this architecture can be extended beyond just Facebook Messenger, as they obviously believed it was a really good architecture for app development.
 
     % big system
     % "real" system

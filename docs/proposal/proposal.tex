@@ -12,7 +12,6 @@
 
 \setlength{\parskip}{1.0em}
 \setlength{\headsep}{1em}
-\setlength{\headheight}{0em}
 \setlength{\parindent}{0em}
 
 \titlespacing*{\section}
@@ -30,7 +29,7 @@
 \postdate{}
 
 \title{Project Proposal}
-\author{Andrew Palmer, Mark Roth}
+\author{Andrew Palmer, Mark Roth, Dylan Packham}
 
 \begin{document}
     \maketitle
@@ -69,7 +68,7 @@
     \section{Proposed Solution}
     % Overview
     % TODO: should we mention how this is like Facebook's solution? probably?
-    We propose to replicate project lightspeed by creating a generic data synchronization service comprised of a Sync Service, Identity Service, and Sync Client.
+    We propose to attempt to reproduce Project LightSpeed, at least in part, by creating a generic data synchronization service comprised of a Sync Service, Identity Service, and Sync Client We will then build an app on top of this service.
     The diagram in Figure~\ref{fig:high-level} shows how these different components interact with each other and with the application that is built on top of them.
 
     % Diagram
@@ -79,7 +78,8 @@
         \caption{A high level diagram of the proposed architecture. The ellipse shapes represent components that are specific to a particular domain application. The rounded rectangles represent components that are generic with respect to domain. \label{fig:high-level}}
     \end{figure}
 
-    The Sync Service will provide data synchronization, allowing us to reuse the same service to manage data synchronization for many different clients installations. It will also perform access control for data, making sure users only have access to their own data.
+    The Sync Service will provide data synchronization, allowing us to reuse the same service to manage data synchronization for many different clients.
+    It will also perform access control for data, making sure users only have access to their own data.
 
     The Sync Service will be extensible in three ways to address domain concerns: validation, conflict resolution, and triggers.
         %TODO: not sure how much this next couple of sentences are necessary if we are trying to cut down on page length, could be a place to cut.
@@ -88,25 +88,43 @@
         Conflict resolution extensions allow for a flexible and domain specific approach to resolving attempts to synchronize data that causes a conflict where the same data has been modified by two different clients.
         Trigger extensions will allow for arbitrary actions to be taken in the server when a client causes the data to change due to a sync.
 
-    The Sync Service will have a network interface that communicates with the common client library or Sync Client. 
+    The Sync Service will have a network interface that communicates with the common client library or Sync Client.
     The Sync Client will provide uniform data synchronization and access (via SQLite) across features in all clients.
     It will also provide an interface to the Identity Service.
         The Sync Client will be provided as a library that can be shared between different client implementations.
 
     The Identity Service will provide information about identity of users to the rest of the system, including user authentication and session management.
 
-    The focus of our work will be on the Sync Service and the Sync client in order to replicate the extensibility and reusability that Meta was attempting to accomplish with similar services in project lightspeed. Ideally to demonstrate the extensibility and versatility of our system, we will be able to write at least one simple client with a handful of features to test database driven UI. As time allows, we can also create other clients (possibly on other platforms) to test the data synchronization and cross-platform nature of our sync client. If time does not permit, we should still be able to show data synchronization across devices by installing the “main” client on different devices and ensuring that they stay in sync.
+    The focus of our work will be on the Sync Service and the Sync client in order to replicate the extensibility and re usability that Meta was attempting to accomplish with similar services in Project LightSpeed.
+    Ideally to demonstrate the extensibility and versatility of our system, we will be able to write at least one simple client with a handful of features to test database driven UI.
+    As time allows, we can also create other clients (possibly on other platforms) to test the data synchronization and cross-platform nature of our sync client.
+    If time does not permit, we should still be able to show data synchronization across devices by installing the “main” client on different devices and ensuring that they stay in sync.
 
     % TODO: I don’t think we should need any of the rest as it gets pretty implementation specific and will probably change as we go
 
     \section{What Will We Learn}
-    By rebuilding Facebook Messenger from the ground up, Meta did something relatively unique that isn’t commonly seen in software development. They rebuilt their app entirely from scratch into a new architectural paradigm. Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did. While all architectural decisions involve tradeoffs a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way. This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come, as the process of greenfield development is costly. What makes this even more interesting is that in many ways the architecture that they decided on is relatively different from modern app development. While there are similar components to other modern architectures, ie using native components and data driven ui, the implementation is unique, database synchronization and a nontraditional MVVM architecture. They pushed reusability as far as they could to keep down the number of views and view controllers in a way that isn’t commonly seen in the industry currently. While many companies are organizing apps and breaking teams down into domains, Meta is grouping more and more items into each domain to keep the app lightweight, essentially creating more of a monolith in the interest of code reusability. They also focused on their MSYS system that created a standardized way of data access and synchronization, which allowed them to reuse even more code.
+    By rebuilding Facebook Messenger from the ground up, Meta did something relatively unique that isn’t commonly seen in software development.
+    They rebuilt their app entirely from scratch into a new architectural paradigm.
+    Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did.
+    While all architectural decisions involve tradeoffs a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
+    This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come, as the process of greenfield development is costly.
+    What makes this even more interesting is that in many ways the architecture that they decided on is relatively different from modern app development.
+    While there are similar components to other modern architectures, ie using native components and data driven UI, the implementation is unique, database synchronization and a nontraditional MVVM architecture.
+    They pushed reusability as far as they could to keep down the number of views and view controllers in a way that isn’t commonly seen in the industry currently.
+    While many companies are organizing apps and breaking teams down into domains, Meta is grouping more and more items into each domain to keep the app lightweight, essentially creating more of a monolith in the interest of code reusability.
+    They also focused on their MSYS system that created a standardized way of data access and synchronization, which allowed them to reuse even more code.
 
-    Reimplementing this project will allow us to try out a relatively unique architecture for ourselves. We will gain experience in an architectural pattern that we don’t have experience with and will allow us to compare it with architectures we have worked with in the past. As this is an app focused project, we have a starting point and a point of contrast with other architectural styles commonly used in the field from projects from previous classes. This will allow us to better contrast and discuss as a team the pros and cons as we all have relatively even footing going into this project. We will be starting in a similar place to Meta, building the app from the ground up, which will allow us to run in to some of the same hiccups and architectural decisions that they made along the way in their early days of prototyping. We hope to also see firsthand why they decided there were enough architectural benefits to pursue this model from the ground up, instead of taking a more gradual evolutionary approach to a more “standard” app development architecture.
-
+    Reimplementing this project will allow us to try out a relatively unique architecture for ourselves.
+    We will gain experience in an architectural pattern that we don’t have experience with and will allow us to compare it with architectures we have worked with in the past.
+    As this is an app focused project, we have a starting point and a point of contrast with other architectural styles commonly used in the field from projects from previous classes.
+    This will allow us to better contrast and discuss as a team the pros and cons as we all have relatively even footing going into this project.
+    We will be starting in a similar place to Meta, building the app from the ground up, which will allow us to run in to some of the same hiccups and architectural decisions that they made along the way in their early days of prototyping.
+    We hope to also see firsthand why they decided there were enough architectural benefits to pursue this model from the ground up, instead of taking a more gradual evolutionary approach to a more “standard” app development architecture.
 
     % big system
     % "real" system
     % extensible system more complex than brittle single purpose system
+    % is data synchronization a problem that can be solved in a generic manner?
+    %   will it have the desired characteristics?
 
 \end{document}

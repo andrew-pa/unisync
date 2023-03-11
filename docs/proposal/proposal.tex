@@ -56,15 +56,23 @@
             \subsubsection{Robustness}
             The application should be designed to handle errors and unexpected events in a graceful manner, to prevent data loss or corruption. For example, the system should include appropriate error handling and recovery mechanisms in case of network failures or other issues.
             \subsubsection{Scalability}
-            The application should be designed to handle increasing amounts of data and user traffic as the system grows. This might involve using distributed systems or other techniques to allow for horizontal scaling, as well as optimizing database performance and reducing bottlenecks in the system.
+            The application should be designed to handle increasing amounts of data and user traffic as the system grows.
+            This might involve using distributed systems or other techniques to allow for horizontal scaling, as well as optimizing database performance and reducing bottlenecks in the system.
             \subsubsection{Performance}
             Keeping sync to a quick and seamless process will provide clients with a more pleasurable experience. 
             \subsubsection{Portability}
-            The application should be designed to provide fast and responsive interactions for users, even under heavy load. This might involve optimizing database queries, reducing network latency, and using caching or other techniques to improve performance. As well as, allow different types of clients to access a variety of cloud providers in order to create a generic service. 
+            The application should be designed to provide fast and responsive interactions for users, even under heavy load.
+            This might involve optimizing database queries, reducing network latency, and using caching or other techniques to improve performance.
+            As well as, allow different types of clients to access a variety of cloud providers in order to create a generic service. 
             \subsubsection{Extensibility}
-            The application should be designed to allow for easy modification and extension as new requirements or features arise. This might involve using modular code that separates concerns and reduces dependencies, as well as providing well-defined interfaces and APIs for interacting with the system.
+            The application should be designed to allow for easy modification and extension as new requirements or features arise.
+            This might involve using modular code that separates concerns and reduces dependencies, as well as providing well-defined interfaces and APIs for interacting with the system.
+            This is important to allow the service to be applicable in multiple domains.
             \subsubsection{Security}
-            The application should be designed to protect sensitive user data and prevent unauthorized access or attacks. This might involve using secure communication protocols, encrypting data at rest and in transit, and implementing appropriate access controls and authentication mechanisms. Additionally, the system should be designed to prevent common security vulnerabilities, such as SQL injection or cross-site scripting attacks.
+            The application should be designed to protect sensitive user data and prevent unauthorized access or attacks.
+            This might involve using secure communication protocols, encrypting data at rest and in transit, and implementing appropriate access controls and authentication mechanisms.
+            Additionally, the system should be designed to prevent common security vulnerabilities, such as SQL injection or cross-site scripting attacks.
+
 
     \section{Proposed Solution}
     % Overview
@@ -99,7 +107,7 @@
 
     Ideally to demonstrate the extensibility and versatility of our system, we will be able to write at least one simple client with a handful of features to explore database driven UI.
     As time allows, we can also create other clients (possibly on other platforms) to test the cross-platform nature of the Sync Client.
-    If time does not permit, we should still be able to show data synchronization across devices by installing the “main” client on different devices and ensuring that they stay in sync.
+    If time does not permit, we should still be able to show data synchronization across devices by installing our client app on different devices and ensuring that they stay in sync.
 
     % TODO: I don’t think we should need any of the rest as it gets pretty implementation specific and will probably change as we go
 
@@ -113,7 +121,7 @@
     Like Meta's Project LightSpeed, we will build the app from the ground up, which will allow us to run in to some of the same hiccups and architectural decisions that they made along the way in their early days of prototyping.
     We hope to see firsthand why they decided there were enough architectural benefits to pursue this model from the ground up, instead of taking a more gradual evolutionary approach to a more “standard” app development architecture.
     Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did, because complete rewrites are expensive.
-    While all architectural decisions involve tradeoffs, a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
+    While all architectural decisions involve trade-offs, a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
     This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come.
     We want to find out if this architecture can be extended beyond just Facebook Messenger, as they obviously believed it was a really good architecture for app development.
 

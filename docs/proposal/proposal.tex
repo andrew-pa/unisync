@@ -54,16 +54,17 @@
 
         \subsection{Desirable Architectural Characteristics}
             \subsubsection{Robustness}
-            % Robustness is critical for solving data synchronization. If data is corrupted due to errors, ...
+            The application should be designed to handle errors and unexpected events in a graceful manner, to prevent data loss or corruption. For example, the system should include appropriate error handling and recovery mechanisms in case of network failures or other issues.
             \subsubsection{Scalability}
-            % Lots of users. Not as much data/user but still significant amount.
+            The application should be designed to handle increasing amounts of data and user traffic as the system grows. This might involve using distributed systems or other techniques to allow for horizontal scaling, as well as optimizing database performance and reducing bottlenecks in the system.
             \subsubsection{Performance}
-            % Slow sync is bad for users.
+            Keeping sync to a quick and seamless process will provide clients with a more pleasurable experience. 
             \subsubsection{Portability}
-            % Lots of kinds of clients
-            % Don't want to be tied to a single cloud provider for a generic service
+            The application should be designed to provide fast and responsive interactions for users, even under heavy load. This might involve optimizing database queries, reducing network latency, and using caching or other techniques to improve performance. As well as, allow different types of clients to access a variety of cloud providers in order to create a generic service. 
             \subsubsection{Extensibility}
-            % Different domain applications will still have specific needs
+            The application should be designed to allow for easy modification and extension as new requirements or features arise. This might involve using modular code that separates concerns and reduces dependencies, as well as providing well-defined interfaces and APIs for interacting with the system.
+            \subsubsection{Security}
+            The application should be designed to protect sensitive user data and prevent unauthorized access or attacks. This might involve using secure communication protocols, encrypting data at rest and in transit, and implementing appropriate access controls and authentication mechanisms. Additionally, the system should be designed to prevent common security vulnerabilities, such as SQL injection or cross-site scripting attacks.
 
     \section{Proposed Solution}
     % Overview

@@ -1,0 +1,134 @@
+\documentclass[12pt]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage{titlesec}
+\usepackage[colorlinks,urlcolor=blue]{hyperref}
+\usepackage[pdftex]{graphicx}
+\usepackage{pdfpages}
+\usepackage{multirow}
+
+\setlength{\parskip}{1.0em}
+\setlength{\headsep}{1em}
+\setlength{\parindent}{0em}
+
+\titlespacing*{\section}
+{0pt}{1em}{0pt}
+\titlespacing*{\subsection}
+{0pt}{0pt}{0pt}
+\titlespacing*{\subsubsection}
+{0pt}{0pt}{0pt}
+
+\pretitle{\noindent \LARGE}
+\posttitle{}
+\preauthor{\hfill}
+\postauthor{;\em}
+\predate{}
+\postdate{}
+
+\title{Project Proposal}
+\author{Andrew Palmer, Mark Roth, Dylan Packham}
+
+\begin{document}
+    \maketitle
+
+    \section{Problem Description}
+    Many applications are structured into client and server portions, separated by the Internet.
+    Typically these applications use some kind of remote procedure call protocol to communicate between the client and the server.
+    When you look at what many of these remote procedures actually accomplish, however, you quickly find that they are often dedicated to creating, reading, updating, and deleting resources on the server -- in effect, data synchronization.
+    Often these portions of the RPC interface start to become an architectural sinkhole, where they don't really do anything meaningful, only proxying data directly to and from the database.
+    As a result, they become a source of code bloat and unnecessary complexity that increases development time and makes it harder to add new features, but doesn't add any value to the system.
+    The worst case of this problem is where, baring security, you could just expose the database to the clients directly and it would make little difference to the server's provided functionality.
+
+    These fragile CRUD remote interfaces have another drawback that manifests on the client side.
+    The highly specific server interface tends to create very specific interactions around different resources in the client.
+    Over time this results in duplicated code as each type of resource ends up with its own ad-hoc synchronization mechanism.
+    This can develop into considerable complexity, as discussed by Facebook in their \href{https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/}{Project LightSpeed case study}, where among other anti-patterns, this managed to accumulate 1.7 million lines of code in the Facebook Messenger client.
+
+    Another problem with these ad-hoc data models in the client is that they tend to be fairly inflexible, making it harder to build rich user interfaces without duplicating views or to quickly iterate on new user interface designs.
+    This is another problem that Facebook experienced.
+    Often in such systems adding a new user interface requires modifying the UI code, the inner client code that interfaces with the network, and adding new code to the server.
+    This process creates considerable churn and if there is no data being introduced that is totally new, it is also largely redundant.
+
+        \subsection{Desirable Architectural Characteristics}
+            \subsubsection{Robustness}
+            The application should be designed to handle errors and unexpected events in a graceful manner, to prevent data loss or corruption. For example, the system should include appropriate error handling and recovery mechanisms in case of network failures or other issues.
+            \subsubsection{Scalability}
+            The application should be designed to handle increasing amounts of data and user traffic as the system grows.
+            This might involve using distributed systems or other techniques to allow for horizontal scaling, as well as optimizing database performance and reducing bottlenecks in the system.
+            \subsubsection{Performance}
+            Keeping sync to a quick and seamless process will provide clients with a more pleasurable experience. 
+            \subsubsection{Portability}
+            The application should be designed to provide fast and responsive interactions for users, even under heavy load.
+            This might involve optimizing database queries, reducing network latency, and using caching or other techniques to improve performance.
+            As well as, allow different types of clients to access a variety of cloud providers in order to create a generic service. 
+            \subsubsection{Extensibility}
+            The application should be designed to allow for easy modification and extension as new requirements or features arise.
+            This might involve using modular code that separates concerns and reduces dependencies, as well as providing well-defined interfaces and APIs for interacting with the system.
+            This is important to allow the service to be applicable in multiple domains.
+            \subsubsection{Security}
+            The application should be designed to protect sensitive user data and prevent unauthorized access or attacks.
+            This might involve using secure communication protocols, encrypting data at rest and in transit, and implementing appropriate access controls and authentication mechanisms.
+            Additionally, the system should be designed to prevent common security vulnerabilities, such as SQL injection or cross-site scripting attacks.
+
+
+    \section{Proposed Solution}
+    % Overview
+    % TODO: should we mention how this is like Facebook's solution? probably?
+    We propose to attempt to reproduce Project LightSpeed, at least in part, by creating a generic data synchronization service comprised of a Sync Service, Identity Service, and Sync Client We will then build an app on top of this service.
+    We hope to achieve the same extensibility and reusablity characteristics that they achieved.
+    The diagram in Figure~\ref{fig:high-level} shows how these different components interact with each other and with the application that is built on top of them.
+
+    % Diagram
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.95\linewidth]{./diagrams.pdf}
+        \caption{A high level diagram of the proposed architecture. The ellipse shapes represent components that are specific to a particular domain application. The rounded rectangles represent components that are generic with respect to domain. \label{fig:high-level}}
+    \end{figure}
+
+    The Sync Service will provide data synchronization, allowing us to reuse the same service to manage data synchronization for many different clients.
+    It will also perform access control for data, making sure users only have access to their own data.
+
+    The Sync Service will be extensible in three ways to address domain concerns: validation, conflict resolution, and triggers.
+        %TODO: not sure how much this next couple of sentences are necessary if we are trying to cut down on page length, could be a place to cut.
+        \footnote{These aren't strictly necessary to demonstrate the idea, but if we have time they would be interesting and pertinent additions.}
+        Validation extensions will provide a way to validate incoming data from clients and reject attempts to synchronize invalid data.
+        Conflict resolution extensions allow for a flexible and domain specific approach to resolving attempts to synchronize data that causes a conflict where the same data has been modified by two different clients.
+        Trigger extensions will allow for arbitrary actions to be taken in the server when a client causes the data to change due to a sync.
+
+    The Sync Service will have a network interface that communicates with the common client library or Sync Client.
+    The Sync Client will provide uniform data synchronization and access (via SQLite) across features in all clients.
+    It will also provide an interface to the Identity Service.
+        The Sync Client will be provided as a library that can be shared between different client implementations, analogous to Project LightSpeed's MSYS package.
+
+    The Identity Service will provide information about identity of users to the rest of the system, including user authentication and session management.
+
+    Ideally to demonstrate the extensibility and versatility of our system, we will be able to write at least one simple client with a handful of features to explore database driven UI.
+    As time allows, we can also create other clients (possibly on other platforms) to test the cross-platform nature of the Sync Client.
+    If time does not permit, we should still be able to show data synchronization across devices by installing our client app on different devices and ensuring that they stay in sync.
+
+    % TODO: I don’t think we should need any of the rest as it gets pretty implementation specific and will probably change as we go
+
+    \section{What Will We Learn}
+    Completing this project will allow us to try out this unique architecture.
+    We will gain experience in a new architectural paradigm that we don’t have experience with and will allow us to compare it with architectures we have worked with in the past.
+    From our previous experience with mobile development from projects in previous classes, we have a starting point and a point of contrast with other architectural styles commonly used in the field.
+    While there are similar components in other modern architectures, like using native components and a data driven user interface, the Project LightSpeed idea is unique because of its focus on reusable uniformity.
+    We also want to learn how to build reusable, unified systems like this.
+
+    Like Meta's Project LightSpeed, we will build the app from the ground up, which will allow us to run in to some of the same hiccups and architectural decisions that they made along the way in their early days of prototyping.
+    We hope to see firsthand why they decided there were enough architectural benefits to pursue this model from the ground up, instead of taking a more gradual evolutionary approach to a more “standard” app development architecture.
+    Most of the time companies switch architectures they do so using an evolutionary approach, like Reddit and Shopify did, because complete rewrites are expensive.
+    While all architectural decisions involve trade-offs, a greenfield redevelopment of an existing app showcases an idealized version of an architecture that is hard to accomplish in an evolutionary way.
+    This suggests that Meta believed strongly that this architecture was ideal and would put them in a good place for years to come.
+    We want to find out if this architecture can be extended beyond just Facebook Messenger, as they obviously believed it was a really good architecture for app development.
+
+    % big system
+    % "real" system
+    % extensible system more complex than brittle single purpose system
+    % is data synchronization a problem that can be solved in a generic manner?
+    %   will it have the desired characteristics?
+
+\end{document}

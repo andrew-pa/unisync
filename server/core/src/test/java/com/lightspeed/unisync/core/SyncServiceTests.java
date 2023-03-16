@@ -1,4 +1,4 @@
-package org.example.unisync.core;
+package com.lightspeed.unisync.core;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

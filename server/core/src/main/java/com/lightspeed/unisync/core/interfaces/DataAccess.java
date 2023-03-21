@@ -2,17 +2,18 @@ package com.lightspeed.unisync.core.interfaces;
 
 import com.lightspeed.unisync.core.model.Row;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public interface DataAccess {
     /**
-     * Gather the IDs of every row in the table associated with a user
+     * Gather the IDs and content hashes of every row in the table associated with a user
      * @param tableName the name of the table
      * @param userId the user ID
-     * @return the set of row IDs in the table associated with the user
+     * @return a map of row IDs to row hashes in the table associated with the user
      */
-    Set<Integer> rowIdsInTable(String tableName, UUID userId);
+    Map<Integer, Long> rowIdsInTable(String tableName, UUID userId);
 
     /**
      * Reads a row out of the store

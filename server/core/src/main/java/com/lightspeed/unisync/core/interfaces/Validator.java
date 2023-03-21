@@ -1,5 +1,6 @@
 package com.lightspeed.unisync.core.interfaces;
 
+import com.lightspeed.unisync.core.model.InvalidRow;
 import com.lightspeed.unisync.core.model.Pair;
 import com.lightspeed.unisync.core.model.Row;
 
@@ -9,7 +10,7 @@ public interface Validator {
     /**
      * Validate a new row entering the store
      * @param r the new row
-     * @return None if the row is valid; otherwise a reason string, and if applicable the column that was invalid
+     * @return None if the row is valid; otherwise the invalid row object representing the failure to validate
      */
-    Optional<Pair<String, Integer>> isValid(Row r);
+    Optional<InvalidRow> isValid(Row r);
 }

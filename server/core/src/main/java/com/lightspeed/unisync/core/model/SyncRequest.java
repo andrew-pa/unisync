@@ -9,6 +9,8 @@ public class SyncRequest {
 
     public final Set<Integer> currentRows;
     public final Set<Integer> previousSyncRows;
+
+    // rows that are not in previousSyncRows but are in currentRows
     public final Set<Row> newRows;
 
     public SyncRequest(String tableName, UUID sessionId, Set<Integer> currentRows, Set<Integer> previousSyncRows, Set<Row> newRows) {

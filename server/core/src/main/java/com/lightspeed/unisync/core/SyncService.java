@@ -22,7 +22,8 @@ public class SyncService {
     }
 
     public SyncResponse syncTable(SyncRequest request) {
-        if(!this.identity.checkSession(request.sessionId)) {
+        var maybeUserId = this.identity.checkSession(request.sessionId);
+        if(maybeUserId.isEmpty()) {
             throw new RuntimeException("unauthorized request");
         }
         return null;

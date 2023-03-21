@@ -9,10 +9,10 @@
         <module name="core" />
         <module name="aws" />
         <module name="firebase" />
+        <module name="im" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="im" target="11" />
       <module name="im-server" target="11" />
     </bytecodeTargetLevel>
   </component>

@@ -2,6 +2,7 @@ package com.lightspeed.unisync.core;
 
 import com.lightspeed.unisync.core.interfaces.DataAccess;
 import com.lightspeed.unisync.core.interfaces.IdentityService;
+import com.lightspeed.unisync.core.interfaces.Validator;
 import com.lightspeed.unisync.core.model.*;
 
 import java.util.*;
@@ -19,6 +20,24 @@ public class SyncService {
         this.tables = tables;
     }
 
+    /**
+     * Split incoming new rows into a set of invalid rows and a map of valid row IDs to valid row data objects
+     * @param validator the validator to use to perform validation
+     * @param newRows the incoming new rows
+     * @param invalidRows output set of invalid rows
+     * @param validNewRows output map of valid rows
+     */
+    void validateIncomingRows(Validator validator, Set<Row> newRows, Set<InvalidRow> invalidRows, Map<Integer, Row> validNewRows) {
+        for (Row newRow : newRows) {
+            Optional<InvalidRow> maybeInvalid = validator.isValid(newRow);
+            if (maybeInvalid.isPresent()) {
+                invalidRows.add(maybeInvalid.get());
+            } else {
+                validNewRows.put(newRow.id, newRow);
+            }
+        }
+    }
+
     public SyncResponse syncTable(SyncRequest request) {
         var maybeUserId = this.identity.checkSession(request.sessionId);
         if(maybeUserId.isEmpty()) {
@@ -28,49 +47,22 @@ public class SyncService {
         var table = this.tables.get(request.tableName);
         var serverRows = this.data.rowIdsInTable(table.name, userId);
 
-        // TODO: this sync code should go somewhere else so it is easier to unit test
-
-        // separate new rows into valid and invalid rows using the validator
         Set<InvalidRow> invalidRows = new HashSet<>();
         Map<Integer, Row> validNewRows = new HashMap<>();
-        for (Row newRow : request.newRows) {
-            Optional<InvalidRow> maybeInvalid = table.validator.isValid(newRow);
-            if (maybeInvalid.isPresent()) {
-                invalidRows.add(maybeInvalid.get());
-            } else {
-                validNewRows.put(newRow.id, newRow);
-            }
-        }
+        this.validateIncomingRows(table.validator, request.newRows, invalidRows, validNewRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
         Set<Integer> deletedRows = new HashSet<>();
 
-        for(int currentClientRowId : request.currentRows.keySet()) {
-            var inPre = request.previousRows.containsKey(currentClientRowId);
-            var inSrv = serverRows.containsKey(currentClientRowId);
-            if(!inPre && !inSrv) {
-                // new row
-            } else if(inPre && !inSrv) {
-                // deleted row
-            } else if(inSrv) {
-                // both client and server have the row - has it been modified?
-                long serverRowHash = serverRows.get(currentClientRowId);
-                long clientRowHash = request.currentRows.get(currentClientRowId);
-                if(serverRowHash != clientRowHash) {
-                    // row has been modified
-                }
-            }
-        }
-
-        for(int serverRowId : serverRows.keySet()) {
-            var inPre = request.previousRows.containsKey(serverRowId);
-            var inClient = request.currentRows.containsKey(serverRowId);
-            if(!inPre && !inClient) {
-                // new row
-            } else if(inPre && !inClient) {
-                // deleted row
-            }
-        }
+        (new SyncAlgorithm(
+                r -> this.data.writeRow(table.name, userId, r),
+                id -> this.data.deleteRow(table.name, userId, id),
+                id -> this.data.readRow(table.name, userId, id),
+                table.conflictResolver,
+                validNewRows,
+                serverRows,
+                request.currentRows,
+                request.previousRows)).run(newOrModifiedRows, deletedRows);
 
         return new SyncResponse(deletedRows, newOrModifiedRows, invalidRows);
     }

@@ -19,7 +19,7 @@ public class SyncRequest {
     public final Map<Integer, Long> previousRows;
 
     /**
-     * row data for rows that are not in previousRows but are in currentRows
+     * row data for rows that are new or have been modified
      */
     public final Set<Row> newRows;
 

@@ -16,4 +16,14 @@ public class DynamoDataAccess implements DataAccess {
     public Row readRow(String tableName, UUID userId, int rowId) {
         return null;
     }
+
+    @Override
+    public void writeRow(String tableName, UUID userId, Row newRow) {
+
+    }
+
+    @Override
+    public void deleteRow(String tableName, UUID userId, int rowId) {
+
+    }
 }

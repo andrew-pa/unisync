@@ -23,4 +23,8 @@ public interface DataAccess {
      * @return the row data
      */
     Row readRow(String tableName, UUID userId, int rowId);
+
+    void writeRow(String tableName, UUID userId, Row newRow);
+
+    void deleteRow(String tableName, UUID userId, int rowId);
 }

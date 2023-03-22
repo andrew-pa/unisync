@@ -15,4 +15,8 @@ public class Row {
         this.data = data;
         this.dataHash = dataHash;
     }
+
+    public Row(int id, List<String> data) {
+        this(id, data, 0L); // TODO: actually compute hash
+    }
 }

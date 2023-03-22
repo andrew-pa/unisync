@@ -3,7 +3,6 @@ package com.lightspeed.unisync.core.interfaces;
 import com.lightspeed.unisync.core.model.Row;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public interface DataAccess {
@@ -24,7 +23,19 @@ public interface DataAccess {
      */
     Row readRow(String tableName, UUID userId, int rowId);
 
+    /**
+     * Write or overwrite a row in the store associated with a user
+     * @param tableName the name of the table that contains the row
+     * @param userId the id of the associated user
+     * @param newRow the new row
+     */
     void writeRow(String tableName, UUID userId, Row newRow);
 
+    /**
+     * Delete a row in the store associated with a user
+     * @param tableName the name of the table that contains the row
+     * @param userId the id of the associated user
+     * @param rowId the id of the row to delete
+     */
     void deleteRow(String tableName, UUID userId, int rowId);
 }

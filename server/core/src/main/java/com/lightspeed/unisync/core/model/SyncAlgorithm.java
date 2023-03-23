@@ -33,14 +33,15 @@ public class SyncAlgorithm {
     public void run(Set<Row> newOrModifiedRows, Set<Integer> deletedRows) {
         // process all the rows in the client current set
         for(int currentClientRowId : currentClientRows.keySet()) {
-            if(!validNewRows.containsKey(currentClientRowId)) continue;
 
             var inPre = previousClientRows.containsKey(currentClientRowId);
             var inSrv = serverRows.containsKey(currentClientRowId);
 
             if(!inPre && !inSrv) {
                 // new row in server store
-                this.writeRow.accept(validNewRows.get(currentClientRowId));
+                if(validNewRows.containsKey(currentClientRowId)) {
+                    this.writeRow.accept(validNewRows.get(currentClientRowId));
+                }
             } else if(inPre && !inSrv) {
                 // deleted row in server store
                 deletedRows.add(currentClientRowId);
@@ -50,8 +51,8 @@ public class SyncAlgorithm {
                 long clientRowHash = currentClientRows.get(currentClientRowId);
                 if(serverRowHash != clientRowHash) {
                     // row has been modified
-                    boolean changedOnClient = currentClientRows.get(currentClientRowId) == previousClientRows.get(currentClientRowId);
-                    boolean changedOnServer = serverRows.get(currentClientRowId) == previousClientRows.get(currentClientRowId);
+                    boolean changedOnClient = currentClientRows.get(currentClientRowId) != previousClientRows.get(currentClientRowId);
+                    boolean changedOnServer = serverRows.get(currentClientRowId) != previousClientRows.get(currentClientRowId);
                     if(changedOnClient && !changedOnServer) {
                         if(validNewRows.containsKey(currentClientRowId)) {
                             this.writeRow.accept(validNewRows.get(currentClientRowId));

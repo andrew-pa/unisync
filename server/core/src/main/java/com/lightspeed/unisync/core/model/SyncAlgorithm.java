@@ -30,55 +30,58 @@ public class SyncAlgorithm {
         this.previousClientRows = previousClientRows;
     }
 
+    void processSharedRow(int rowId, Set<Row> newOrModifiedRows) {
+        long serverRowHash = serverRows.get(rowId);
+        long clientRowHash = currentClientRows.get(rowId);
+        if (serverRowHash != clientRowHash) {
+            // row has been modified
+            boolean changedOnClient = currentClientRows.get(rowId) != previousClientRows.get(rowId);
+            boolean changedOnServer = serverRows.get(rowId) != previousClientRows.get(rowId);
+            if (changedOnClient && !changedOnServer) {
+                if (validNewRows.containsKey(rowId)) {
+                    this.writeRow.accept(validNewRows.get(rowId));
+                }
+            } else if (!changedOnClient && changedOnServer) {
+                newOrModifiedRows.add(this.readRow.apply(rowId));
+            } else if (changedOnClient && changedOnServer) {
+                if (validNewRows.containsKey(rowId)) {
+                    Row clientRow = validNewRows.get(rowId);
+                    Row serverRow = this.readRow.apply(rowId);
+                    Row resolvedRow = this.conflictResolver.resolveCoflict(clientRow, serverRow);
+                    this.writeRow.accept(resolvedRow);
+                    newOrModifiedRows.add(resolvedRow);
+                }
+            }
+        }
+    }
+
     public void run(Set<Row> newOrModifiedRows, Set<Integer> deletedRows) {
         // process all the rows in the client current set
-        for(int currentClientRowId : currentClientRows.keySet()) {
-
+        for (int currentClientRowId : currentClientRows.keySet()) {
             var inPre = previousClientRows.containsKey(currentClientRowId);
             var inSrv = serverRows.containsKey(currentClientRowId);
 
-            if(!inPre && !inSrv) {
+            if (!inPre && !inSrv) {
                 // new row in server store
-                if(validNewRows.containsKey(currentClientRowId)) {
+                if (validNewRows.containsKey(currentClientRowId)) {
                     this.writeRow.accept(validNewRows.get(currentClientRowId));
                 }
-            } else if(inPre && !inSrv) {
+            } else if (inPre && !inSrv) {
                 // deleted row in server store
                 deletedRows.add(currentClientRowId);
-            } else if(inSrv) {
-                // both client and server have the row - has it been modified?
-                long serverRowHash = serverRows.get(currentClientRowId);
-                long clientRowHash = currentClientRows.get(currentClientRowId);
-                if(serverRowHash != clientRowHash) {
-                    // row has been modified
-                    boolean changedOnClient = currentClientRows.get(currentClientRowId) != previousClientRows.get(currentClientRowId);
-                    boolean changedOnServer = serverRows.get(currentClientRowId) != previousClientRows.get(currentClientRowId);
-                    if(changedOnClient && !changedOnServer) {
-                        if(validNewRows.containsKey(currentClientRowId)) {
-                            this.writeRow.accept(validNewRows.get(currentClientRowId));
-                        }
-                    } else if(!changedOnClient && changedOnServer) {
-                        newOrModifiedRows.add(this.readRow.apply(currentClientRowId));
-                    } else if(changedOnClient && changedOnServer) {
-                        if(validNewRows.containsKey(currentClientRowId)) {
-                            Row clientRow = validNewRows.get(currentClientRowId);
-                            Row serverRow = this.readRow.apply(currentClientRowId);
-                            Row resolvedRow = this.conflictResolver.resolveCoflict(clientRow, serverRow);
-                            this.writeRow.accept(resolvedRow);
-                            newOrModifiedRows.add(resolvedRow);
-                        }
-                    }
-                }
+            } else if (inSrv) {
+                // both client and server have the row
+                processSharedRow(currentClientRowId, newOrModifiedRows);
             }
         }
 
         // process all the rows in the server set that aren't in the client current set
-        for(int serverRowId : serverRows.keySet()) {
+        for (int serverRowId : serverRows.keySet()) {
             var inClient = currentClientRows.containsKey(serverRowId);
-            if(inClient) continue;
+            if (inClient) continue;
 
             var inPre = previousClientRows.containsKey(serverRowId);
-            if(!inPre) {
+            if (!inPre) {
                 // new row for client store
                 newOrModifiedRows.add(this.readRow.apply(serverRowId));
             } else {

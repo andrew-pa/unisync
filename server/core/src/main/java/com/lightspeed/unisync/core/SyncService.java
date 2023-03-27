@@ -22,9 +22,10 @@ public class SyncService {
 
     /**
      * Split incoming new rows into a set of invalid rows and a map of valid row IDs to valid row data objects
-     * @param validator the validator to use to perform validation
-     * @param newRows the incoming new rows
-     * @param invalidRows output set of invalid rows
+     *
+     * @param validator    the validator to use to perform validation
+     * @param newRows      the incoming new rows
+     * @param invalidRows  output set of invalid rows
      * @param validNewRows output map of valid rows
      */
     void validateIncomingRows(Validator validator, Set<Row> newRows, Set<InvalidRow> invalidRows, Map<Integer, Row> validNewRows) {
@@ -40,7 +41,7 @@ public class SyncService {
 
     public SyncResponse syncTable(SyncRequest request) {
         var maybeUserId = this.identity.checkSession(request.sessionId);
-        if(maybeUserId.isEmpty()) {
+        if (maybeUserId.isEmpty()) {
             throw new RuntimeException("unauthorized request");
         }
         var userId = maybeUserId.get();

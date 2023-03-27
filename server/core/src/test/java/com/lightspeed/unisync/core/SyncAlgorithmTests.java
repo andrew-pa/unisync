@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -44,7 +42,7 @@ public class SyncAlgorithmTests {
         Assertions.assertDoesNotThrow(() -> algo.run(newOrModifiedRows, deletedRows));
 
         Assertions.assertEquals(serverRows.size(), newOrModifiedRows.size());
-        for(var row : serverRows.values()) {
+        for (var row : serverRows.values()) {
             Assertions.assertTrue(newOrModifiedRows.contains(row));
         }
         Assertions.assertEquals(0, deletedRows.size());
@@ -124,7 +122,7 @@ public class SyncAlgorithmTests {
         currentClientRows.put(newRow.id, newRow.dataHash);
         Map<Integer, Long> previousClientRows = Map.copyOf(serverRowHashes);
 
-        var writeRow = (Consumer<Row>)Mockito.mock(Consumer.class);
+        var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
 
         var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
@@ -138,6 +136,7 @@ public class SyncAlgorithmTests {
         Assertions.assertEquals(0, newOrModifiedRows.size());
         Assertions.assertEquals(0, deletedRows.size());
     }
+
     @Test
     public void rowDeletedOnClientDeletedOnServer() {
         Map<Integer, Row> validNewRows = Map.of();
@@ -146,7 +145,7 @@ public class SyncAlgorithmTests {
         currentClientRows.remove(1);
         Map<Integer, Long> previousClientRows = Map.copyOf(serverRowHashes);
 
-        var deleteRow = (Consumer<Integer>)Mockito.mock(Consumer.class);
+        var deleteRow = (Consumer<Integer>) Mockito.mock(Consumer.class);
 
         var algo = new SyncAlgorithm(null, deleteRow, serverRows::get, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
@@ -170,7 +169,7 @@ public class SyncAlgorithmTests {
         currentClientRows.put(newRow.id, newRow.dataHash);
         Map<Integer, Long> previousClientRows = Map.copyOf(serverRowHashes);
 
-        var writeRow = (Consumer<Row>)Mockito.mock(Consumer.class);
+        var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
 
         var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
@@ -197,7 +196,7 @@ public class SyncAlgorithmTests {
         var newRowServer = new Row(1, List.of("Alice", "alice@example.com", "18"), 2);
         serverRows.put(newRowServer.id, newRowServer);
 
-        var writeRow = (Consumer<Row>)Mockito.mock(Consumer.class);
+        var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
         var conflictResolver = Mockito.mock(ConflictResolver.class);
 
         // client wins
@@ -230,7 +229,7 @@ public class SyncAlgorithmTests {
         var newRowServer = new Row(1, List.of("Alice", "alice@example.com", "18"), 2);
         serverRows.put(newRowServer.id, newRowServer);
 
-        var writeRow = (Consumer<Row>)Mockito.mock(Consumer.class);
+        var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
         var conflictResolver = Mockito.mock(ConflictResolver.class);
 
         // server wins

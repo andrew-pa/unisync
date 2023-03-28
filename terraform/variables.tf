@@ -1,6 +1,6 @@
 variable "table_name" {
   description = "Dynamodb table name (space is not allowed)"
-  default     = "Demo-first-table"
+  default     = "unisync-table"
 
 }
 

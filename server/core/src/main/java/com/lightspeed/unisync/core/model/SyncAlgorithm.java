@@ -47,7 +47,7 @@ public class SyncAlgorithm {
                 if (validNewRows.containsKey(rowId)) {
                     Row clientRow = validNewRows.get(rowId);
                     Row serverRow = this.readRow.apply(rowId);
-                    Row resolvedRow = this.conflictResolver.resolveCoflict(clientRow, serverRow);
+                    Row resolvedRow = this.conflictResolver.resolveConflict(clientRow, serverRow);
                     this.writeRow.accept(resolvedRow);
                     newOrModifiedRows.add(resolvedRow);
                 }

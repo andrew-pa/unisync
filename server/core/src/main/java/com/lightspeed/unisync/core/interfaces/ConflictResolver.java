@@ -10,5 +10,5 @@ public interface ConflictResolver {
      * @param serverRow the row that made it to the server first
      * @return a new row that represents the resolved conflict
      */
-    Row resolveCoflict(Row clientRow, Row serverRow);
+    Row resolveConflict(Row clientRow, Row serverRow);
 }

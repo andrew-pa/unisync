@@ -200,7 +200,7 @@ public class SyncAlgorithmTests {
         var conflictResolver = Mockito.mock(ConflictResolver.class);
 
         // client wins
-        Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(0)).when(conflictResolver).resolveCoflict(Mockito.any(), Mockito.any());
+        Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(0)).when(conflictResolver).resolveConflict(Mockito.any(), Mockito.any());
 
         var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
@@ -209,7 +209,7 @@ public class SyncAlgorithmTests {
         Set<Integer> deletedRows = new HashSet<>();
         Assertions.assertDoesNotThrow(() -> algo.run(newOrModifiedRows, deletedRows));
 
-        Mockito.verify(conflictResolver).resolveCoflict(newRowClient, newRowServer);
+        Mockito.verify(conflictResolver).resolveConflict(newRowClient, newRowServer);
         Mockito.verify(writeRow).accept(newRowClient);
 
         Assertions.assertEquals(1, newOrModifiedRows.size());
@@ -233,7 +233,7 @@ public class SyncAlgorithmTests {
         var conflictResolver = Mockito.mock(ConflictResolver.class);
 
         // server wins
-        Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(1)).when(conflictResolver).resolveCoflict(Mockito.any(), Mockito.any());
+        Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(1)).when(conflictResolver).resolveConflict(Mockito.any(), Mockito.any());
 
         var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
@@ -242,7 +242,7 @@ public class SyncAlgorithmTests {
         Set<Integer> deletedRows = new HashSet<>();
         Assertions.assertDoesNotThrow(() -> algo.run(newOrModifiedRows, deletedRows));
 
-        Mockito.verify(conflictResolver).resolveCoflict(newRowClient, newRowServer);
+        Mockito.verify(conflictResolver).resolveConflict(newRowClient, newRowServer);
         Mockito.verify(writeRow).accept(newRowServer);
 
         Assertions.assertEquals(1, newOrModifiedRows.size());

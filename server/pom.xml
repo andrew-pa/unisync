@@ -11,7 +11,7 @@
         <module>core</module>
         <module>aws</module>
         <module>firebase</module>
-        <module>im-server</module>
+        <module>apps</module>
     </modules>
 
     <build>

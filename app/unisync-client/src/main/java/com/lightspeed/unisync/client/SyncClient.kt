@@ -11,39 +11,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
-data class Row(val id: Int, val dataHash: Long, val data: List<String>) {
-    constructor(dbRow: Cursor) : this(
-        dbRow.getInt(0),
-        dbRow.getLong(1),
-        List(dbRow.columnCount - 3) { dbRow.getString(it + 3) })
-}
-
-data class InvalidRow(val reason:String, val columnIndex:String, val id: Int, val dataHash: Long, val data: List<String>)
-
-data class SyncResponse(val deletedRows : Set<Int>, val newOrModifiedRows: Set<Row>, val invalidRows: Set<InvalidRow>)
-
-class SyncClient(context: Context, schemaVersion: Int) {
+class SyncClient(context: Context, private val schema: Schema) {
     val sessionId = UUID.randomUUID()
-    val db = SyncDbHelper(context, schemaVersion)
-    val tableNames = HashSet<String>()
+    val db = SyncDbHelper(context, schema)
 
     init {
         // log in
-        // read all table names
-        db.readableDatabase.query(
-            "sqlite_master",
-            arrayOf("name"),
-            "type='table' AND NOT name LIKE 'status%'",
-            null,
-            null,
-            null,
-            null
-        ).use { tables ->
-            while (!tables.isAfterLast) {
-                tableNames.add(tables.getString(0))
-                tables.moveToNext()
-            }
-        }
         // start sync worker
         runBlocking {
             launch { syncWorkerLoop() }
@@ -80,8 +53,9 @@ class SyncClient(context: Context, schemaVersion: Int) {
 
     private fun syncTables() {
         runBlocking {
-            tableNames.map { tableName ->
-                async {
+            schema.tables.map { table ->
+                val tableName = table.key
+                launch {
                     val newRows = HashSet<Row>()
                     // select new or modified rows
                     db.readableDatabase.query(
@@ -104,10 +78,24 @@ class SyncClient(context: Context, schemaVersion: Int) {
                         readRowsAndHash("status$tableName"),
                         newRows
                     )
+                    if (result.invalidRows.isNotEmpty()) {
+                        throw RuntimeException("rows returned as invalid: ${result.invalidRows}")
+                    }
                     db.writableDatabase.delete(tableName, "rowId IN (${result.deletedRows.joinToString { it.toString() }})", arrayOf())
                     for (row in result.newOrModifiedRows) {
-                        val values = ContentValues()
-                        db.writableDatabase.insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_REPLACE)
+                        val values = table.value.columns.foldIndexed(ContentValues()) { index: Int, vals: ContentValues, col: Pair<String, String> ->
+                            vals.put(col.second, row.data[index])
+                            vals
+                        }
+                        values.put("rowId", row.id)
+                        values.put("dataHash", row.dataHash)
+                        values.put("_modified", false)
+                        db.writableDatabase.insertWithOnConflict(
+                            tableName,
+                            null,
+                            values,
+                            SQLiteDatabase.CONFLICT_REPLACE
+                        )
                     }
                 }
             }.forEach { it.join() }

@@ -1,9 +1,10 @@
 package com.lightspeed.unisync.client
 
 import android.database.Cursor
-import java.util.*
+import kotlinx.serialization.Serializable
 
 
+@Serializable
 data class Row(val id: Int, val dataHash: String, val data: List<String>) {
     constructor(dbRow: Cursor) : this(
         dbRow.getInt(0),
@@ -11,6 +12,7 @@ data class Row(val id: Int, val dataHash: String, val data: List<String>) {
         List(dbRow.columnCount - 3) { dbRow.getString(it + 3) })
 }
 
+@Serializable
 data class InvalidRow(
     val reason: String,
     val columnIndex: String,
@@ -19,14 +21,16 @@ data class InvalidRow(
     val data: List<String>
 )
 
+@Serializable
 data class SyncRequest(
     val tableName: String,
-    val sessionId: UUID,
+    val userName: String,
     val currentRows: Map<Int, Long>,
     val previousRows: Map<Int, Long>,
     val newRows: Set<Row>
 )
 
+@Serializable
 data class SyncResponse(
     val deletedRows: Set<Int>,
     val newOrModifiedRows: Set<Row>,

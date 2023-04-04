@@ -12,15 +12,19 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import java.lang.Long.min
 import java.math.BigInteger
 import java.security.MessageDigest
-import java.util.*
+import kotlin.concurrent.thread
 
-class SyncClient(context: Context, private val syncUrl: String, private val schema: Schema) {
-    private val sessionId = UUID.randomUUID()
+class SyncClient(
+    context: Context,
+    private val userName: String,
+    private val syncUrl: String,
+    private val schema: Schema
+) {
     private val db = SyncDbHelper(context, schema)
     private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -31,17 +35,21 @@ class SyncClient(context: Context, private val syncUrl: String, private val sche
     init {
         // log in
         // start sync worker
-        runBlocking {
-            launch { syncWorkerLoop() }
+        thread {
+            syncWorkerLoop()
         }
     }
 
-    private suspend fun syncWorkerLoop() {
+    private fun syncWorkerLoop() {
+        Log.i("SyncClient", "starting sync worker")
         var timeToWait = 50L
         while (true) {
-            syncTables()
-            timeToWait *= 2
-            delay(timeToWait)
+            if (syncTables()) {
+                timeToWait = 50L;
+            } else {
+                timeToWait = min(timeToWait * 2, 5000L)
+            }
+            Thread.sleep(timeToWait)
         }
     }
 
@@ -64,11 +72,12 @@ class SyncClient(context: Context, private val syncUrl: String, private val sche
         return rows
     }
 
-    private fun syncTables() {
-        runBlocking {
+    private fun syncTables(): Boolean {
+        Log.i("SyncClient", "synchronizing tables")
+        return runBlocking {
             schema.tables.map { table ->
                 val tableName = table.key
-                launch {
+                async {
                     val newRows = HashSet<Row>()
                     // select new or modified rows
                     db.readableDatabase.query(
@@ -85,20 +94,25 @@ class SyncClient(context: Context, private val syncUrl: String, private val sche
                             it.moveToNext()
                         }
                     }
+                    val currentRows = readRowsAndHash(tableName)
+                    val previousRows = readRowsAndHash("status$tableName")
                     val result = callServer(
                         tableName,
-                        readRowsAndHash(tableName),
-                        readRowsAndHash("status$tableName"),
+                        currentRows,
+                        previousRows,
                         newRows
-                    ) ?: return@launch
+                    ) ?: return@async true
+                    Log.i("SyncClient", "got sync result: $result")
                     if (result.invalidRows.isNotEmpty()) {
                         throw RuntimeException("rows returned as invalid: ${result.invalidRows}")
                     }
-                    db.writableDatabase.delete(
-                        tableName,
-                        "rowId IN (${result.deletedRows.joinToString { it.toString() }})",
-                        arrayOf()
-                    )
+                    if (result.deletedRows.isNotEmpty()) {
+                        db.writableDatabase.delete(
+                            tableName,
+                            "rowId IN (${result.deletedRows.joinToString { it.toString() }})",
+                            arrayOf()
+                        )
+                    }
                     for (row in result.newOrModifiedRows) {
                         val values =
                             table.value.columns.foldIndexed(ContentValues()) { index: Int, vals: ContentValues, col: Pair<String, String> ->
@@ -115,8 +129,13 @@ class SyncClient(context: Context, private val syncUrl: String, private val sche
                             SQLiteDatabase.CONFLICT_REPLACE
                         )
                     }
+                    // update status table to reflect new current table
+                    db.writableDatabase.delete("status$tableName", null, null)
+                    db.writableDatabase.execSQL("INSERT INTO status$tableName SELECT rowId, dataHash FROM $tableName")
+                    // sync again soon if anything changed on the server or the client
+                    result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
                 }
-            }.forEach { it.join() }
+            }.fold(false) { acc, job -> acc || job.await() }
         }
     }
 
@@ -128,7 +147,7 @@ class SyncClient(context: Context, private val syncUrl: String, private val sche
     ): SyncResponse? {
         val resp = httpClient.post(syncUrl) {
             contentType(ContentType.Application.Json)
-            setBody(SyncRequest(tableName, sessionId, currentRows, previousRows, newRows))
+            setBody(SyncRequest(tableName, userName, currentRows, previousRows, newRows))
         }
         if (resp.status.isSuccess()) {
             return resp.body()

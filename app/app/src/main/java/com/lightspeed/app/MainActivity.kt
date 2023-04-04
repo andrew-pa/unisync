@@ -15,10 +15,14 @@ import com.lightspeed.app.ui.theme.AppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Data.init(this)
         setContent {
             AppTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colors.background
+                ) {
                     Greeting("Android")
                 }
             }

@@ -4,16 +4,23 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import androidx.core.database.sqlite.transaction
-import kotlinx.coroutines.async
+import android.util.Log
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.math.BigInteger
+import java.security.MessageDigest
 import java.util.*
 
-class SyncClient(context: Context, private val schema: Schema) {
+class SyncClient(context: Context, private val syncUrl: String, private val schema: Schema) {
     val sessionId = UUID.randomUUID()
     val db = SyncDbHelper(context, schema)
+    val httpClient = HttpClient(CIO)
 
     init {
         // log in
@@ -77,16 +84,21 @@ class SyncClient(context: Context, private val schema: Schema) {
                         readRowsAndHash(tableName),
                         readRowsAndHash("status$tableName"),
                         newRows
-                    )
+                    ) ?: return@launch
                     if (result.invalidRows.isNotEmpty()) {
                         throw RuntimeException("rows returned as invalid: ${result.invalidRows}")
                     }
-                    db.writableDatabase.delete(tableName, "rowId IN (${result.deletedRows.joinToString { it.toString() }})", arrayOf())
+                    db.writableDatabase.delete(
+                        tableName,
+                        "rowId IN (${result.deletedRows.joinToString { it.toString() }})",
+                        arrayOf()
+                    )
                     for (row in result.newOrModifiedRows) {
-                        val values = table.value.columns.foldIndexed(ContentValues()) { index: Int, vals: ContentValues, col: Pair<String, String> ->
-                            vals.put(col.second, row.data[index])
-                            vals
-                        }
+                        val values =
+                            table.value.columns.foldIndexed(ContentValues()) { index: Int, vals: ContentValues, col: Pair<String, String> ->
+                                vals.put(col.first, row.data[index])
+                                vals
+                            }
                         values.put("rowId", row.id)
                         values.put("dataHash", row.dataHash)
                         values.put("_modified", false)
@@ -107,19 +119,44 @@ class SyncClient(context: Context, private val schema: Schema) {
         currentRows: Map<Int, Long>,
         previousRows: Map<Int, Long>,
         newRows: Set<Row>
-    ): SyncResponse {
-        TODO("Not yet implemented")
+    ): SyncResponse? {
+        val resp = httpClient.post(syncUrl) {
+            contentType(ContentType.Application.Json)
+            setBody(SyncRequest(tableName, sessionId, currentRows, previousRows, newRows))
+        }
+        if (resp.status.isSuccess()) {
+            return resp.body()
+        } else {
+            Log.e(
+                "SyncClient",
+                "failed to make network request: " + resp.status + " " + resp.body()
+            )
+            return null
+        }
     }
+
+    private fun newRowId(): Long =
+        kotlin.random.Random.nextLong(0x3fff_ffff_ffff_ffff)
+
+
+    private fun computeDataHash(values: ContentValues): String =
+        BigInteger(1, values.keySet().fold(MessageDigest.getInstance("MD5")) { h, s ->
+            h.update(s.toByteArray())
+            h
+        }.digest()).toString(Character.MAX_RADIX)
 
     fun insert(table: String, values: ContentValues): Long {
         // TODO: bother to notify the sync system that this table has changed?
-        // TODO: compute new hash value
+        values.put("rowId", newRowId())
+        values.put("dataHash", computeDataHash(values))
+        values.put("_modified", false)
         return db.writableDatabase.insert(table, null, values)
     }
 
     fun update(table: String, values: ContentValues, where: String, args: Array<String>): Int {
         // TODO: bother to notify the sync system that this table has changed?
-        // TODO: compute new hash value
+        values.put("dataHash", computeDataHash(values))
+        values.put("_modified", true)
         return db.writableDatabase.update(table, values, where, args)
     }
 

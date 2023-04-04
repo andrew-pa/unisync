@@ -8,8 +8,10 @@ import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -18,9 +20,13 @@ import java.security.MessageDigest
 import java.util.*
 
 class SyncClient(context: Context, private val syncUrl: String, private val schema: Schema) {
-    val sessionId = UUID.randomUUID()
-    val db = SyncDbHelper(context, schema)
-    val httpClient = HttpClient(CIO)
+    private val sessionId = UUID.randomUUID()
+    private val db = SyncDbHelper(context, schema)
+    private val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
 
     init {
         // log in

@@ -12,4 +12,13 @@ public class SyncResponse {
         this.newOrModifiedRows = newOrModifiedRows;
         this.invalidRows = invalidRows;
     }
+
+    @Override
+    public String toString() {
+        return "SyncResponse{" +
+                "deletedRows=" + deletedRows +
+                ", newOrModifiedRows=" + newOrModifiedRows +
+                ", invalidRows=" + invalidRows +
+                '}';
+    }
 }

@@ -17,6 +17,9 @@ import kotlinx.coroutines.runBlocking
 import java.lang.Long.min
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.util.*
+import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 import kotlin.concurrent.thread
 
 class SyncClient(
@@ -147,7 +150,7 @@ class SyncClient(
     ): SyncResponse? {
         val resp = httpClient.post(syncUrl) {
             contentType(ContentType.Application.Json)
-            setBody(SyncRequest(tableName, userName, currentRows, previousRows, newRows))
+            setBody(SyncRequest(tableName, UUID.fromString("0a832d37-b296-4d54-b124-55835087e80f"), currentRows, previousRows, newRows))
         }
         if (resp.status.isSuccess()) {
             return resp.body()

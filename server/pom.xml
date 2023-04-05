@@ -12,6 +12,7 @@
         <module>aws</module>
         <module>firebase</module>
         <module>apps</module>
+        <module>local-test-server</module>
     </modules>
 
     <build>

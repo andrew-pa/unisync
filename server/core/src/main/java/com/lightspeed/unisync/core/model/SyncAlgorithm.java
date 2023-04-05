@@ -89,5 +89,7 @@ public class SyncAlgorithm {
                 this.deleteRow.accept(serverRowId);
             }
         }
+
+        // TODO: execute triggers
     }
 }

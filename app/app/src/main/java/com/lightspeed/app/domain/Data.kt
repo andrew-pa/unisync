@@ -1,4 +1,4 @@
-package com.lightspeed.app
+package com.lightspeed.app.domain
 
 import android.content.Context
 import com.lightspeed.unisync.client.Schema

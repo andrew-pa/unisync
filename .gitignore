@@ -1,8 +1,5 @@
 **/.out/**
 **/.$*
 **/.ninja_log
-.env
-.terraform/
-.terraform.lock.hcl
-terraform.tfstate
-terraform.tfstate.backup
+terraform/.env
+terraform/.terraform/

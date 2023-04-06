@@ -111,10 +111,10 @@ resource "aws_api_gateway_method" "example_method" {
 }
 
 # Set up Lambda permissions for API
-resource "aws_lambda_permission" "example_lambda_permission" {
+resource "aws_lambda_permission" "allow-api-permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = "unisync_lambda"
+  function_name = aws_lambda_function.lambda_function.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_deployment.example_deployment.execution_arn}/*/${aws_api_gateway_method.example_method.http_method}${aws_api_gateway_resource.example_resource.path}"
 }
@@ -136,57 +136,3 @@ resource "aws_api_gateway_deployment" "example_deployment" {
   rest_api_id = aws_api_gateway_rest_api.unisync_api.id
   stage_name  = "dev"
 }
-
-
-# # Create API Gateway
-# resource "aws_api_gateway_rest_api" "example_api" {
-#   name = "example-api"
-# }
-
-# # Create a resource
-# resource "aws_api_gateway_resource" "example_resource" {
-#   rest_api_id = aws_api_gateway_rest_api.example_api.id
-#   parent_id   = aws_api_gateway_rest_api.example_api.root_resource_id
-#   path_part   = "example"
-# }
-
-# # Create a method for the resource
-# resource "aws_api_gateway_method" "example_method" {
-#   rest_api_id   = aws_api_gateway_rest_api.example_api.id
-#   resource_id   = aws_api_gateway_resource.example_resource.id
-#   http_method   = "POST"
-#   authorization = "NONE"
-# }
-
-# # Create integration between API Gateway and Lambda
-# resource "aws_api_gateway_integration" "example_integration" {
-#   rest_api_id = aws_api_gateway_rest_api.example_api.id
-#   resource_id = aws_api_gateway_resource.example_resource.id
-#   http_method = aws_api_gateway_method.example_method.http_method
-#   type        = "AWS_PROXY"
-#   uri         = aws_lambda_function.example_lambda.invoke_arn
-# }
-
-# # Deploy the API
-# resource "aws_api_gateway_deployment" "example_deployment" {
-#   depends_on = [aws_api_gateway_integration.example_integration]
-#   rest_api_id = aws_api_gateway_rest_api.example_api.id
-#   stage_name = "prod"
-# }
-
-# # Connect the method to the integration
-# resource "aws_api_gateway_method_response" "example_method_response" {
-#   rest_api_id = aws_api_gateway_rest_api.example_api.id
-#   resource_id = aws_api_gateway_resource.example_resource.id
-#   http_method = aws_api_gateway_method.example_method.http_method
-#   status_code = "200"
-# }
-
-# # Set up Lambda permissions
-# resource "aws_lambda_permission" "example_lambda_permission" {
-#   statement_id  = "AllowAPIGatewayInvoke"
-#   action        = "lambda:InvokeFunction"
-#   function_name = "unisync-Lambda"
-#   principal     = "apigateway.amazonaws.com"
-#   source_arn    = "${aws_api_gateway_deployment.example_deployment.execution_arn}/*/${aws_api_gateway_method.example_method.http_method}${aws_api_gateway_resource.example_resource.path}"
-# }

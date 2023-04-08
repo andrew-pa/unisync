@@ -34,7 +34,7 @@ public class SyncAlgorithmTests {
         Map<Integer, Long> currentClientRows = Map.of();
         Map<Integer, Long> previousClientRows = Map.of();
 
-        var algo = new SyncAlgorithm(null, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(null, null, serverRows::get, null, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -58,7 +58,7 @@ public class SyncAlgorithmTests {
         var newRow = new Row(4, List.of("George", "george@example.com", "23"));
         serverRows.put(newRow.id, newRow);
 
-        var algo = new SyncAlgorithm(null, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(null, null, serverRows::get, null, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -79,7 +79,7 @@ public class SyncAlgorithmTests {
 
         serverRows.remove(1);
 
-        var algo = new SyncAlgorithm(null, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(null, null, serverRows::get, null, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -101,7 +101,7 @@ public class SyncAlgorithmTests {
         var newRow = new Row(1, List.of("Alice", "alice@example.com", "28"), 1);
         serverRows.put(newRow.id, newRow);
 
-        var algo = new SyncAlgorithm(null, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(null, null, serverRows::get, null, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -124,7 +124,7 @@ public class SyncAlgorithmTests {
 
         var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
 
-        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -147,7 +147,7 @@ public class SyncAlgorithmTests {
 
         var deleteRow = (Consumer<Integer>) Mockito.mock(Consumer.class);
 
-        var algo = new SyncAlgorithm(null, deleteRow, serverRows::get, null,
+        var algo = new SyncAlgorithm(null, deleteRow, serverRows::get, null, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -171,7 +171,7 @@ public class SyncAlgorithmTests {
 
         var writeRow = (Consumer<Row>) Mockito.mock(Consumer.class);
 
-        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null,
+        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, null, null,
                 validNewRows, serverRowHashes, currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -202,7 +202,7 @@ public class SyncAlgorithmTests {
         // client wins
         Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(0)).when(conflictResolver).resolveConflict(Mockito.any(), Mockito.any());
 
-        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver,
+        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();
@@ -235,7 +235,7 @@ public class SyncAlgorithmTests {
         // server wins
         Mockito.doAnswer(invocationOnMock -> invocationOnMock.getArgument(1)).when(conflictResolver).resolveConflict(Mockito.any(), Mockito.any());
 
-        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver,
+        var algo = new SyncAlgorithm(writeRow, null, serverRows::get, conflictResolver, null,
                 validNewRows, getServerRowHashes(), currentClientRows, previousClientRows);
 
         Set<Row> newOrModifiedRows = new HashSet<>();

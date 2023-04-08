@@ -60,6 +60,7 @@ public class SyncService {
                 id -> this.data.deleteRow(table.name, userId, id),
                 id -> this.data.readRow(table.name, userId, id),
                 table.conflictResolver,
+                table.trigger,
                 validNewRows,
                 serverRows,
                 request.currentRows,

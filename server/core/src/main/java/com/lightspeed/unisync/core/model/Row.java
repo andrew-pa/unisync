@@ -17,6 +17,6 @@ public class Row {
     }
 
     public Row(int id, List<String> data) {
-        this(id, data, 0L); // TODO: actually compute hash
+        this(id, data, data.hashCode()); // Java's default hash is good enough for a prototype
     }
 }

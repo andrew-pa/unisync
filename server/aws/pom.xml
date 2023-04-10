@@ -37,6 +37,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.lightspeed.unisync</groupId>
             <artifactId>core</artifactId>
             <version>1.0-SNAPSHOT</version>

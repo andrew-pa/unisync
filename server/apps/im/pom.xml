@@ -28,6 +28,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.lightspeed.unisync</groupId>
+            <artifactId>aws</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.9.2</version>

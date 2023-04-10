@@ -44,6 +44,10 @@ data class Contact(val localId: Int, val name: String, val color: String, val us
                 arrayOf(contact.localId.toString())
             )
         }
+
+        fun registerObserver(ob: () -> Unit) {
+            Data.db().registerObserver("contacts", ob)
+        }
     }
 }
 
@@ -70,6 +74,19 @@ data class Message(val id: Int, val contents: String, val mimeType: String, val 
                 put("receiverId", receiverId.toString())
                 this
             })
+        }
+
+        fun registerInboxObserver(ob: () -> Unit) {
+            Data.db().registerObserver("inbox", ob)
+        }
+
+        fun registerOutboxObserver(ob: () -> Unit) {
+            Data.db().registerObserver("outbox", ob)
+        }
+
+        fun registerObserver(ob: () -> Unit) {
+            registerInboxObserver(ob)
+            registerOutboxObserver(ob)
         }
     }
 }

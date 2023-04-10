@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -30,6 +32,12 @@ class SyncClient(
         install(ContentNegotiation) {
             json()
         }
+    }
+
+    private val observers = HashMap<String, MutableSet<()->Unit>>()
+
+    fun registerObserver(tableName: String, observer: ()->Unit) {
+        observers.getOrElse(tableName, {HashSet()}).add(observer)
     }
 
     init {
@@ -133,7 +141,16 @@ class SyncClient(
                     db.writableDatabase.delete("status$tableName", null, null)
                     db.writableDatabase.execSQL("INSERT INTO status$tableName SELECT rowId, dataHash FROM $tableName")
                     // sync again soon if anything changed on the server or the client
-                    result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    val changed = result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    if(changed && observers.containsKey(tableName)) {
+                        val obs = observers[tableName]
+                        if(obs!!.isNotEmpty()) {
+                            Handler(Looper.getMainLooper()).post {
+                                for(ob in obs) { ob() }
+                            }
+                        }
+                    }
+                    changed
                 }
             }.fold(false) { acc, job -> acc || job.await() }
         }

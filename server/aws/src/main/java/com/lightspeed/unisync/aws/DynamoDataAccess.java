@@ -18,19 +18,33 @@ public class DynamoDataAccess implements DataAccess {
         client = DynamoDbClient.builder().region(region).build();
     }
 
+    Map<String, AttributeValue> makeKey(String tableName, UUID userId) {
+        return Map.of("userId", AttributeValue.fromS(userId.toString()),
+               "tableName", AttributeValue.fromS(tableName));
+    }
+    Map<String, AttributeValue> makeKey(UUID userId, int rowId) {
+        return Map.of("userId", AttributeValue.fromS(userId.toString()),
+                "rowId", AttributeValue.fromN(Integer.toString(rowId)));
+    }
+
     @Override
     public Map<Integer, Long> rowIdsInTable(String tableName, UUID userId) {
-        client.getItem(b -> {
-        });
-        return null;
+        var res = client.getItem(b -> b.tableName("_tableInfo")
+                .key(makeKey(tableName, userId)));
+        if(res.hasItem()) {
+            return res.item().get("rowsInfo").m().entrySet().stream()
+                    .collect(Collectors.toMap(
+                            kv -> Integer.parseInt(kv.getKey()),
+                            kv -> Long.parseLong(kv.getValue().n())));
+        } else {
+            return Map.of();
+        }
     }
 
     @Override
     public Row readRow(String tableName, UUID userId, int rowId) {
         var res = client.getItem(b ->
-                b.tableName(tableName)
-                        .key(Map.of("userId", AttributeValue.fromS(userId.toString()),
-                                "rowId", AttributeValue.fromN(Integer.toString(rowId)))));
+                b.tableName(tableName).key(makeKey(userId, rowId)));
         if (res.hasItem()) {
             var item = res.item();
             List<String> data = item.get("data").l().stream().map(AttributeValue::s).collect(Collectors.toList());
@@ -51,14 +65,22 @@ public class DynamoDataAccess implements DataAccess {
                 "data", AttributeValue.fromL(newRow.data.stream().map(AttributeValue::fromS).collect(Collectors.toList())))));
         client.updateItem(b ->
                 b.tableName("_tableInfo")
-                        .key(Map.of("userId", AttributeValue.fromS(userId.toString()),
-                                "tableName", AttributeValue.fromS(tableName)))
+                        .key(makeKey(tableName, userId))
+                        .updateExpression("SET rowsInfo[:rowId] = :dataHash")
+                        .expressionAttributeValues(Map.of(":rowId", AttributeValue.fromN(Integer.toString(newRow.id)),
+                                ":dataHash", AttributeValue.fromN(Long.toString(newRow.dataHash))))
         );
     }
 
     @Override
     public void deleteRow(String tableName, UUID userId, int rowId) {
-        client.deleteItem(b -> {
-        });
+        client.deleteItem(b -> b.tableName(tableName)
+                .key(makeKey(userId, rowId)));
+        client.updateItem(b ->
+                b.tableName("_tableInfo")
+                        .key(makeKey(tableName, userId))
+                        .updateExpression("DELETE rowsInfo[:rowId]")
+                        .expressionAttributeValues(Map.of("rowId", AttributeValue.fromN(Integer.toString(rowId))))
+        );
     }
 }

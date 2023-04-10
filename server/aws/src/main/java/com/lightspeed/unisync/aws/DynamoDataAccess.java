@@ -5,6 +5,7 @@ import com.lightspeed.unisync.core.model.Row;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,9 @@ public class DynamoDataAccess implements DataAccess {
 
     Map<String, AttributeValue> makeKey(String tableName, UUID userId) {
         return Map.of("userId", AttributeValue.fromS(userId.toString()),
-               "tableName", AttributeValue.fromS(tableName));
+                "tableName", AttributeValue.fromS(tableName));
     }
+
     Map<String, AttributeValue> makeKey(UUID userId, int rowId) {
         return Map.of("userId", AttributeValue.fromS(userId.toString()),
                 "rowId", AttributeValue.fromN(Integer.toString(rowId)));
@@ -31,7 +33,7 @@ public class DynamoDataAccess implements DataAccess {
     public Map<Integer, Long> rowIdsInTable(String tableName, UUID userId) {
         var res = client.getItem(b -> b.tableName("_tableInfo")
                 .key(makeKey(tableName, userId)));
-        if(res.hasItem()) {
+        if (res.hasItem()) {
             return res.item().get("rowsInfo").m().entrySet().stream()
                     .collect(Collectors.toMap(
                             kv -> Integer.parseInt(kv.getKey()),
@@ -60,27 +62,35 @@ public class DynamoDataAccess implements DataAccess {
     public void writeRow(String tableName, UUID userId, Row newRow) {
         client.putItem(b -> b.tableName(tableName).item(
                 Map.of("userId", AttributeValue.fromS(userId.toString()),
-                "rowId", AttributeValue.fromN(Integer.toString(newRow.id)),
-                "dataHash", AttributeValue.fromN(Long.toString(newRow.dataHash)),
-                "data", AttributeValue.fromL(newRow.data.stream().map(AttributeValue::fromS).collect(Collectors.toList())))));
-        client.updateItem(b ->
-                b.tableName("_tableInfo")
-                        .key(makeKey(tableName, userId))
-                        .updateExpression("SET rowsInfo[:rowId] = :dataHash")
-                        .expressionAttributeValues(Map.of(":rowId", AttributeValue.fromN(Integer.toString(newRow.id)),
-                                ":dataHash", AttributeValue.fromN(Long.toString(newRow.dataHash))))
-        );
+                        "rowId", AttributeValue.fromN(Integer.toString(newRow.id)),
+                        "dataHash", AttributeValue.fromN(Long.toString(newRow.dataHash)),
+                        "data", AttributeValue.fromL(newRow.data.stream().map(AttributeValue::fromS).collect(Collectors.toList())))));
+        try {
+            client.updateItem(b ->
+                    b.tableName("_tableInfo")
+                            .key(makeKey(tableName, userId))
+                            .updateExpression("SET rowsInfo.#rowId = :dataHash")
+                            .expressionAttributeNames(Map.of("#rowId", Integer.toString(newRow.id)))
+                            .expressionAttributeValues(Map.of(":dataHash", AttributeValue.fromN(Long.toString(newRow.dataHash))))
+            );
+        } catch (DynamoDbException e) {
+            // assume the error is because the item does not exist
+            client.putItem(b -> b.tableName("_tableInfo")
+                    .item(Map.of("tableName", AttributeValue.fromS(tableName),
+                            "userId", AttributeValue.fromS(userId.toString()),
+                            "rowsInfo", AttributeValue.fromM(Map.of(Integer.toString(newRow.id), AttributeValue.fromN(Long.toString(newRow.dataHash)))))));
+        }
     }
 
     @Override
     public void deleteRow(String tableName, UUID userId, int rowId) {
-        client.deleteItem(b -> b.tableName(tableName)
+        var res = client.deleteItem(b -> b.tableName(tableName)
                 .key(makeKey(userId, rowId)));
         client.updateItem(b ->
                 b.tableName("_tableInfo")
                         .key(makeKey(tableName, userId))
-                        .updateExpression("DELETE rowsInfo[:rowId]")
-                        .expressionAttributeValues(Map.of("rowId", AttributeValue.fromN(Integer.toString(rowId))))
+                        .updateExpression("REMOVE rowsInfo.#rowId")
+                        .expressionAttributeNames(Map.of("#rowId", Integer.toString(rowId)))
         );
     }
 }

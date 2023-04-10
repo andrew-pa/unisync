@@ -10,6 +10,7 @@
         <module name="aws" />
         <module name="firebase" />
         <module name="im" />
+        <module name="local-test-server" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

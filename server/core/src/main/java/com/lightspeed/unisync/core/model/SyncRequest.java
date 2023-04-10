@@ -30,4 +30,15 @@ public class SyncRequest {
         this.previousRows = previousRows;
         this.newRows = newRows;
     }
+
+    @Override
+    public String toString() {
+        return "SyncRequest{" +
+                "tableName='" + tableName + '\'' +
+                ", sessionId='" + sessionId + '\'' +
+                ", currentRows=" + currentRows +
+                ", previousRows=" + previousRows +
+                ", newRows=" + newRows +
+                '}';
+    }
 }

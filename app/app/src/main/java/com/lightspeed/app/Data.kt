@@ -12,7 +12,7 @@ object Data {
         if (db != null) return
 
         db = SyncClient(
-            context, "test-user-1", "https://sync",
+            context, "test-user-1", "http://10.0.2.2:3001/sync",
             Schema(
                 1, mapOf(
                     Pair(

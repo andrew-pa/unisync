@@ -35,7 +35,7 @@ public class SyncRequest {
     public String toString() {
         return "SyncRequest{" +
                 "tableName='" + tableName + '\'' +
-                ", sessionId='" + sessionId + '\'' +
+                ", sessionId=" + sessionId +
                 ", currentRows=" + currentRows +
                 ", previousRows=" + previousRows +
                 ", newRows=" + newRows +

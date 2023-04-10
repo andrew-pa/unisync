@@ -20,6 +20,7 @@ import java.lang.Long.min
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 class SyncClient(
     context: Context,
@@ -34,10 +35,17 @@ class SyncClient(
         }
     }
 
-    private val observers = HashMap<String, MutableSet<()->Unit>>()
+    private val observers = HashMap<String, HashMap<Int, ()->Unit>>()
+    private var nextToken = 7
 
-    fun registerObserver(tableName: String, observer: ()->Unit) {
-        observers.getOrElse(tableName, {HashSet()}).add(observer)
+    fun registerObserver(tableName: String, observer: ()->Unit): Int {
+        val token = nextToken ++
+        observers.getOrElse(tableName, {HashMap()}).put(token, observer)
+        return token
+    }
+
+    fun unregisterObserver(tableName: String, observerToken: Int) {
+        observers[tableName]?.remove(observerToken)
     }
 
     init {

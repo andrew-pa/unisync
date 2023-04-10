@@ -19,8 +19,28 @@ object Data {
                         "contacts", Table(
                             listOf(
                                 Pair("name", "TEXT"),
-                                Pair("phoneNumber", "TEXT"),
-                                Pair("eyeColor", "TEXT")
+                                Pair("color", "TEXT"),
+                                Pair("userId", "TEXT")
+                            )
+                        )
+                    ),
+                    Pair(
+                        "inbox", Table(
+                            listOf(
+                                Pair("senderId", "TEXT"),
+                                Pair("contents", "TEXT"),
+                                Pair("mimeType", "TEXT"),
+                                Pair("timestamp", "INT")
+                            )
+                        )
+                    ),
+                    Pair(
+                        "outbox", Table(
+                            listOf(
+                                Pair("receiverId", "TEXT"),
+                                Pair("contents", "TEXT"),
+                                Pair("mimeType", "TEXT"),
+                                Pair("timestamp", "INT")
                             )
                         )
                     )

@@ -45,7 +45,7 @@ class SyncClient(
         var timeToWait = 50L
         while (true) {
             if (syncTables()) {
-                timeToWait = 50L;
+                timeToWait = 50L
             } else {
                 timeToWait = min(timeToWait * 2, 5000L)
             }
@@ -185,6 +185,10 @@ class SyncClient(
         return db.writableDatabase.update(table, values, where, args)
     }
 
+    fun delete(table: String, where: String, args: Array<String>) {
+        db.writableDatabase.delete(table, where, args)
+    }
+
     // TODO: transactions
 
     fun query(
@@ -206,4 +210,6 @@ class SyncClient(
             limit
         )
     }
+
+    fun raw() = db.readableDatabase
 }

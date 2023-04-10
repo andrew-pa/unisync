@@ -163,8 +163,8 @@ class SyncClient(
         }
     }
 
-    private fun newRowId(): Long =
-        kotlin.random.Random.nextLong(0x3fff_ffff_ffff_ffff)
+    private fun newRowId(): Int =
+        kotlin.random.Random.nextInt(0x3fff_ffff)
 
 
     private fun computeDataHash(values: ContentValues): String =

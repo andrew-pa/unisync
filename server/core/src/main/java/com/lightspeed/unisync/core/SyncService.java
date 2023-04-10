@@ -56,6 +56,7 @@ public class SyncService {
         Set<Integer> deletedRows = new HashSet<>();
 
         (new SyncAlgorithm(
+                userId,
                 r -> this.data.writeRow(table.name, userId, r),
                 id -> this.data.deleteRow(table.name, userId, id),
                 id -> this.data.readRow(table.name, userId, id),

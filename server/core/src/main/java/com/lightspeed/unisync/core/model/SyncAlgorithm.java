@@ -5,10 +5,12 @@ import com.lightspeed.unisync.core.interfaces.Trigger;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SyncAlgorithm {
+    final UUID userId;
     final Consumer<Row> writeRow;
     final Consumer<Integer> deleteRow;
     final Function<Integer, Row> readRow;
@@ -21,7 +23,8 @@ public class SyncAlgorithm {
     final Map<Integer, Long> currentClientRows;
     final Map<Integer, Long> previousClientRows;
 
-    public SyncAlgorithm(Consumer<Row> writeRow, Consumer<Integer> deleteRow, Function<Integer, Row> readRow, ConflictResolver conflictResolver, Trigger tableTriggers, Map<Integer, Row> validNewRows, Map<Integer, Long> serverRows, Map<Integer, Long> currentClientRows, Map<Integer, Long> previousClientRows) {
+    public SyncAlgorithm(UUID userId, Consumer<Row> writeRow, Consumer<Integer> deleteRow, Function<Integer, Row> readRow, ConflictResolver conflictResolver, Trigger tableTriggers, Map<Integer, Row> validNewRows, Map<Integer, Long> serverRows, Map<Integer, Long> currentClientRows, Map<Integer, Long> previousClientRows) {
+        this.userId = userId;
         this.writeRow = writeRow;
         this.deleteRow = deleteRow;
         this.readRow = readRow;
@@ -45,7 +48,7 @@ public class SyncAlgorithm {
                     Row r = validNewRows.get(rowId);
                     this.writeRow.accept(r);
                     if (this.tableTriggers != null)
-                        this.tableTriggers.onRowModified(r);
+                        this.tableTriggers.onRowModified(userId, r);
                 }
             } else if (!changedOnClient && changedOnServer) {
                 newOrModifiedRows.add(this.readRow.apply(rowId));
@@ -57,7 +60,7 @@ public class SyncAlgorithm {
                     this.writeRow.accept(resolvedRow);
                     newOrModifiedRows.add(resolvedRow);
                     if (this.tableTriggers != null)
-                        this.tableTriggers.onRowModified(resolvedRow);
+                        this.tableTriggers.onRowModified(userId, resolvedRow);
                 }
             }
         }
@@ -75,7 +78,7 @@ public class SyncAlgorithm {
                     Row r = validNewRows.get(currentClientRowId);
                     this.writeRow.accept(r);
                     if (this.tableTriggers != null)
-                        this.tableTriggers.onRowCreated(r);
+                        this.tableTriggers.onRowCreated(userId, r);
                 }
             } else if (inPre && !inSrv) {
                 // deleted row in server store
@@ -98,7 +101,7 @@ public class SyncAlgorithm {
             } else {
                 // deleted row in client store
                 if (this.tableTriggers != null)
-                    this.tableTriggers.onRowDeleted(this.readRow.apply(serverRowId));
+                    this.tableTriggers.onRowDeleted(userId, this.readRow.apply(serverRowId));
                 this.deleteRow.accept(serverRowId);
             }
         }

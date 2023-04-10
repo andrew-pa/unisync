@@ -1,3 +1,5 @@
 **/.out/**
 **/.$*
 **/.ninja_log
+terraform/.env
+terraform/.terraform/

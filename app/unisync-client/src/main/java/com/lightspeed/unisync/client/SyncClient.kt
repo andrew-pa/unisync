@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -21,6 +23,7 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 class SyncClient(
     context: Context,
@@ -33,6 +36,19 @@ class SyncClient(
         install(ContentNegotiation) {
             json()
         }
+    }
+
+    private val observers = HashMap<String, HashMap<Int, ()->Unit>>()
+    private var nextToken = 7
+
+    fun registerObserver(tableName: String, observer: ()->Unit): Int {
+        val token = nextToken ++
+        observers.getOrElse(tableName, {HashMap()}).put(token, observer)
+        return token
+    }
+
+    fun unregisterObserver(tableName: String, observerToken: Int) {
+        observers[tableName]?.remove(observerToken)
     }
 
     init {
@@ -48,7 +64,7 @@ class SyncClient(
         var timeToWait = 50L
         while (true) {
             if (syncTables()) {
-                timeToWait = 50L;
+                timeToWait = 50L
             } else {
                 timeToWait = min(timeToWait * 2, 5000L)
             }
@@ -136,7 +152,16 @@ class SyncClient(
                     db.writableDatabase.delete("status$tableName", null, null)
                     db.writableDatabase.execSQL("INSERT INTO status$tableName SELECT rowId, dataHash FROM $tableName")
                     // sync again soon if anything changed on the server or the client
-                    result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    val changed = result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    if(changed && observers.containsKey(tableName)) {
+                        val obs = observers[tableName]
+                        if(obs!!.isNotEmpty()) {
+                            Handler(Looper.getMainLooper()).post {
+                                for(ob in obs) { ob() }
+                            }
+                        }
+                    }
+                    changed
                 }
             }.fold(false) { acc, job -> acc || job.await() }
         }
@@ -188,6 +213,10 @@ class SyncClient(
         return db.writableDatabase.update(table, values, where, args)
     }
 
+    fun delete(table: String, where: String, args: Array<String>) {
+        db.writableDatabase.delete(table, where, args)
+    }
+
     // TODO: transactions
 
     fun query(
@@ -209,4 +238,6 @@ class SyncClient(
             limit
         )
     }
+
+    fun raw() = db.readableDatabase
 }

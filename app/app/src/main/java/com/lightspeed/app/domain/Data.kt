@@ -12,8 +12,10 @@ object Data {
         if (db != null) return
 
         db = SyncClient(
-            context, "test-user-1", "http://10.0.2.2:3001/sync",
-            Schema(
+            context = context,
+            userName = "test-user-1",
+            syncUrl = "http://localhost:3001/sync",
+            schema = Schema(
                 1, mapOf(
                     Pair(
                         "contacts", Table(

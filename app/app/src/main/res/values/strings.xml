@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">app</string>
+    <string name="add_contact_button">Add new contact</string>
 </resources>

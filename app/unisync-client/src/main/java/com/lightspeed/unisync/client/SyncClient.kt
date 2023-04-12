@@ -157,7 +157,9 @@ class SyncClient(
                         val obs = observers[tableName]
                         if(obs!!.isNotEmpty()) {
                             Handler(Looper.getMainLooper()).post {
-                                for(ob in obs) { ob() }
+                                obs.forEach {
+                                    it.value()
+                                }
                             }
                         }
                     }

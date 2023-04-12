@@ -15,7 +15,6 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="im-server" target="11" />
-      <module name="local-test-server" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

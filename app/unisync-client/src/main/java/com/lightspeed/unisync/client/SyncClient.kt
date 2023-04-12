@@ -83,6 +83,7 @@ class SyncClient(
             null,
             null
         ).use {
+            it.moveToFirst()
             while (!it.isAfterLast) {
                 rows[it.getInt(0)] = it.getLong(1)
                 it.moveToNext()
@@ -108,6 +109,7 @@ class SyncClient(
                         null,
                         null
                     ).use {
+                        it.moveToFirst()
                         while (!it.isAfterLast) {
                             newRows.add(Row(it))
                             it.moveToNext()
@@ -157,7 +159,9 @@ class SyncClient(
                         val obs = observers[tableName]
                         if(obs!!.isNotEmpty()) {
                             Handler(Looper.getMainLooper()).post {
-                                for(ob in obs) { ob() }
+                                obs.forEach {
+                                    it.value()
+                                }
                             }
                         }
                     }
@@ -228,7 +232,7 @@ class SyncClient(
         orderBy: String? = null,
         limit: String? = null
     ): Cursor {
-        return db.readableDatabase.query(
+        val c = db.readableDatabase.query(
             table,
             columns,
             selection,
@@ -237,6 +241,8 @@ class SyncClient(
             orderBy,
             limit
         )
+        c.moveToFirst()
+        return c
     }
 
     fun raw() = db.readableDatabase

@@ -9,6 +9,25 @@
         android:id="@+id/login_fragment"
         android:name="com.lightspeed.app.ui.LoginFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/login_fragment" />
+        tools:layout="@layout/login_fragment">
+
+        <action
+            android:id="@+id/create_new_contact"
+            app:destination="@id/create_contact" />
+
+    </fragment>
+
+    <dialog
+        android:id="@+id/create_contact"
+        android:name="com.lightspeed.app.ui.CreateContactFragment"
+        android:label="create contact"
+        tools:layout="@layout/create_contact_fragment">
+
+        <argument
+            android:name="requestKey"
+            app:argType="string" />
+
+    </dialog>
+
 
 </navigation>

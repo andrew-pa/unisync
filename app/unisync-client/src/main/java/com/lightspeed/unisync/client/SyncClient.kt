@@ -196,23 +196,25 @@ class SyncClient(
         kotlin.random.Random.nextInt(0x3fff_ffff)
 
 
-    private fun computeDataHash(values: ContentValues): String =
-        BigInteger(1, values.keySet().fold(MessageDigest.getInstance("MD5")) { h, s ->
-            h.update(s.toByteArray())
-            h
-        }.digest()).toString(Character.MAX_RADIX)
-
+    private fun computeDataHash(table: String, values: ContentValues): Long {
+        val sc = schema.tables[table]!!
+        val rowVals = sc.columns.map {
+            val columnName = it.first
+            values.getAsString(columnName)
+        }
+        return rowVals.hashCode().toLong()
+    }
     fun insert(table: String, values: ContentValues): Long {
         // TODO: bother to notify the sync system that this table has changed?
         values.put("rowId", newRowId())
-        values.put("dataHash", computeDataHash(values))
+        values.put("dataHash", computeDataHash(table, values))
         values.put("_modified", false)
         return db.writableDatabase.insert(table, null, values)
     }
 
     fun update(table: String, values: ContentValues, where: String, args: Array<String>): Int {
         // TODO: bother to notify the sync system that this table has changed?
-        values.put("dataHash", computeDataHash(values))
+        values.put("dataHash", computeDataHash(table, values))
         values.put("_modified", true)
         return db.writableDatabase.update(table, values, where, args)
     }

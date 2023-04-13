@@ -14,14 +14,14 @@ class SyncDbHelper(context: Context, private val schema: Schema) :
                 db.execSQL(
                     "CREATE TABLE $tableName (" +
                             "rowId INTEGER PRIMARY KEY," +
-                            "dataHash TEXT NOT NULL," +
+                            "dataHash INTEGER NOT NULL," +
                             "_modified INTEGER NOT NULL," +
                             "${table.columns.joinToString { "${it.first} ${it.second}" }})"
                 )
                 db.execSQL(
                     "CREATE TABLE status$tableName (" +
                             "rowId INTEGER PRIMARY KEY," +
-                            "dataHash TEXT NOT NULL)"
+                            "dataHash INTEGER NOT NULL)"
                 )
             }
         }

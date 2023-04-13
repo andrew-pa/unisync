@@ -13,9 +13,9 @@ terraform {
 provider "aws" {
   region = "us-west-2"
   default_tags {
-      tags = {
-          Project = "unisync"
-      }
+    tags = {
+      Project = "unisync"
+    }
   }
 }
 
@@ -23,7 +23,7 @@ resource "aws_dynamodb_table" "table_info_table" {
   name         = "_tableInfo"
   billing_mode = var.table_billing_mode
   hash_key     = "tableName"
-  range_key     = "userId"
+  range_key    = "userId"
 
   attribute {
     name = "tableName"
@@ -41,7 +41,7 @@ resource "aws_dynamodb_table" "data_table" {
   name         = each.key
   billing_mode = var.table_billing_mode
   hash_key     = "userId"
-  range_key     = "rowId"
+  range_key    = "rowId"
 
   attribute {
     name = "userId"
@@ -58,9 +58,10 @@ resource "aws_dynamodb_table" "data_table" {
 resource "aws_lambda_function" "lambda_function" {
   filename      = "../server/apps/im/target/im-1.0-SNAPSHOT.jar"
   function_name = "unisync-lambda"
-  role          = aws_iam_role.lambda_execution.arn
+  role          = aws_iam_role.lambda_role.arn
   handler       = "com.lightspeed.unisync.apps.im.SyncLambda::handleRequest"
   runtime       = "java11"
+  memory_size   = 2048
 
   source_code_hash = filebase64sha256("../server/apps/im/target/im-1.0-SNAPSHOT.jar")
 
@@ -69,8 +70,8 @@ resource "aws_lambda_function" "lambda_function" {
 
 
 # Creating IAM role for Lambda Execution
-resource "aws_iam_role" "lambda_execution" {
-  name = "my-lambda-execution-role"
+resource "aws_iam_role" "lambda_role" {
+  name = "lambda-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -87,29 +88,34 @@ resource "aws_iam_role" "lambda_execution" {
 }
 
 # Create Policies
-resource "aws_iam_role_policy_attachment" "lambda_execution" {
+resource "aws_iam_role_policy_attachment" "lambda_dynamo" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
-  role       = aws_iam_role.lambda_execution.name
+  role       = aws_iam_role.lambda_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.lambda_role.name
 }
 
 # Create API Gateway
 resource "aws_api_gateway_rest_api" "unisync_api" {
   name        = "unisync_api"
-  description = "Example API"
+  description = "Unisync API"
 }
 
 # Create a resource
 resource "aws_api_gateway_resource" "example_resource" {
   rest_api_id = aws_api_gateway_rest_api.unisync_api.id
   parent_id   = aws_api_gateway_rest_api.unisync_api.root_resource_id
-  path_part   = "example"
+  path_part   = "sync"
 }
 
 # Create a method for the resource
 resource "aws_api_gateway_method" "example_method" {
   rest_api_id   = aws_api_gateway_rest_api.unisync_api.id
   resource_id   = aws_api_gateway_resource.example_resource.id
-  http_method   = "GET"
+  http_method   = "POST"
   authorization = "NONE"
 }
 
@@ -130,7 +136,7 @@ resource "aws_api_gateway_integration" "example_integration" {
 
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.lambda_function.invoke_arn
-  integration_http_method = "GET"
+  integration_http_method = "POST"
 }
 
 # Deploy the API
@@ -141,5 +147,5 @@ resource "aws_api_gateway_deployment" "example_deployment" {
 }
 
 output "gateway_url" {
-    value = aws_api_gateway_deployment.example_deployment.invoke_url
+  value = aws_api_gateway_deployment.example_deployment.invoke_url
 }

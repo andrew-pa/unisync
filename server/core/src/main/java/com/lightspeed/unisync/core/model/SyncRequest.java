@@ -63,6 +63,8 @@ public class SyncRequest {
      */
     public Set<Row> newRows;
 
+    public SyncRequest() {}
+
     public SyncRequest(String tableName, UUID sessionId, Map<Integer, Long> currentRows, Map<Integer, Long> previousRows, Set<Row> newRows) {
         this.tableName = tableName;
         this.sessionId = sessionId;
@@ -73,7 +75,7 @@ public class SyncRequest {
 
     @Override
     public String toString() {
-        return "SyncRequest{" +
+        return "SyncRequest {" +
                 "tableName='" + tableName + '\'' +
                 ", sessionId=" + sessionId +
                 ", currentRows=" + currentRows +

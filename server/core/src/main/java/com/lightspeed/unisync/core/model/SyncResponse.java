@@ -31,6 +31,8 @@ public class SyncResponse {
     public Set<Row> newOrModifiedRows;
     public Set<InvalidRow> invalidRows;
 
+    public SyncResponse() {}
+
     public SyncResponse(Set<Integer> deletedRows, Set<Row> newOrModifiedRows, Set<InvalidRow> invalidRows) {
         this.deletedRows = deletedRows;
         this.newOrModifiedRows = newOrModifiedRows;

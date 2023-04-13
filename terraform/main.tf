@@ -43,7 +43,7 @@ resource "aws_lambda_function" "lambda_function" {
   function_name = "unisync-lambda"
   role          = aws_iam_role.lambda_execution.arn
   handler       = "lambda_function.handler"
-  runtime       = "python3.7"
+  runtime       = "java11"
 
   source_code_hash = data.archive_file.lambda_function_code.output_base64sha256
 

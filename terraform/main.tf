@@ -125,7 +125,7 @@ resource "aws_lambda_permission" "allow-api-permission" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda_function.arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_deployment.example_deployment.execution_arn}/*/${aws_api_gateway_method.example_method.http_method}${aws_api_gateway_resource.example_resource.path}"
+  source_arn    = "${replace(aws_api_gateway_deployment.example_deployment.execution_arn, aws_api_gateway_deployment.example_deployment.stage_name, "")}*/*"
 }
 
 # Create integration between API Gateway and Lambda

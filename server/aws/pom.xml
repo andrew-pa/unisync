@@ -44,6 +44,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+            <version>3.11.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.lightspeed.unisync</groupId>
             <artifactId>core</artifactId>
             <version>1.0-SNAPSHOT</version>

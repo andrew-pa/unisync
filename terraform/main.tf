@@ -1,57 +1,70 @@
-terraform{
+terraform {
 
-    required_version = ">= 1.2.0"
+  required_version = ">= 1.2.0"
 
-    required_providers {
-      aws = {
-        source = "hashicorp/aws"
-        version = "~> 4.16"
-      }
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
     }
-}  
+  }
+}
 
 provider "aws" {
   region = "us-west-2"
+  default_tags {
+      tags = {
+          Project = "unisync"
+      }
+  }
 }
 
-# Creates a DynamoDB table
-resource "aws_dynamodb_table" "sync_table" {
- name = var.table_name
- hash_key = "syncId"
- billing_mode = var.table_billing_mode
+resource "aws_dynamodb_table" "table_info_table" {
+  name         = "_tableInfo"
+  billing_mode = var.table_billing_mode
+  hash_key     = "tableName"
+  range_key     = "userId"
 
- attribute {
-    name = "syncId"
-  type = "S"
- }
+  attribute {
+    name = "tableName"
+    type = "S"
+  }
 
- tags = {
-   environment = var.environment
- }
+  attribute {
+    name = "userId"
+    type = "S"
+  }
 }
 
-#Zip Lambda code
-data "archive_file" "lambda_function_code" {
-  type        = "zip"
-  source_dir  = "${path.module}/lambda"
-  output_path = "${path.module}/lambda_function_code.zip"
+resource "aws_dynamodb_table" "data_table" {
+  for_each     = toset(["contacts", "inbox", "outbox"])
+  name         = each.key
+  billing_mode = var.table_billing_mode
+  hash_key     = "userId"
+  range_key     = "rowId"
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "rowId"
+    type = "N"
+  }
 }
 
 # Creating lambda function to process data
 resource "aws_lambda_function" "lambda_function" {
-  filename      = data.archive_file.lambda_function_code.output_path
+  filename      = "../server/apps/im/target/im-1.0-SNAPSHOT.jar"
   function_name = "unisync-lambda"
   role          = aws_iam_role.lambda_execution.arn
-  handler       = "lambda_function.handler"
+  handler       = "com.lightspeed.unisync.apps.im.SyncLambda::handleRequest"
   runtime       = "java11"
 
-  source_code_hash = data.archive_file.lambda_function_code.output_base64sha256
+  source_code_hash = filebase64sha256("../server/apps/im/target/im-1.0-SNAPSHOT.jar")
 
-  environment {
-    variables = {
-      TABLE_NAME = var.table_name
-    }
-  }
+  environment {}
 }
 
 
@@ -77,16 +90,6 @@ resource "aws_iam_role" "lambda_execution" {
 resource "aws_iam_role_policy_attachment" "lambda_execution" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
   role       = aws_iam_role.lambda_execution.name
-}
-
-# Set up Dynamo permissions
-resource "aws_lambda_permission" "allow_dynamodb" {
-  statement_id  = "AllowExecutionFromDynamoDB"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_function.arn
-  principal     = "dynamodb.amazonaws.com"
-
-  source_arn = aws_dynamodb_table.sync_table.arn
 }
 
 # Create API Gateway
@@ -125,14 +128,18 @@ resource "aws_api_gateway_integration" "example_integration" {
   resource_id = aws_api_gateway_resource.example_resource.id
   http_method = aws_api_gateway_method.example_method.http_method
 
-  type        = "AWS_PROXY"
-  uri         = aws_lambda_function.lambda_function.invoke_arn
-  integration_http_method     = "GET"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.lambda_function.invoke_arn
+  integration_http_method = "GET"
 }
 
 # Deploy the API
 resource "aws_api_gateway_deployment" "example_deployment" {
-  depends_on = [aws_api_gateway_integration.example_integration]
+  depends_on  = [aws_api_gateway_integration.example_integration]
   rest_api_id = aws_api_gateway_rest_api.unisync_api.id
   stage_name  = "dev"
+}
+
+output "gateway_url" {
+    value = aws_api_gateway_deployment.example_deployment.invoke_url
 }

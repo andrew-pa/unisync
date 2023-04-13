@@ -4,6 +4,8 @@ import com.lightspeed.unisync.core.interfaces.DataAccess;
 import com.lightspeed.unisync.core.interfaces.Trigger;
 import com.lightspeed.unisync.core.model.Row;
 
+import java.util.UUID;
+
 public class OutboxTrigger implements Trigger {
     final DataAccess dataAccess;
 
@@ -11,12 +13,20 @@ public class OutboxTrigger implements Trigger {
         this.dataAccess = dataAccess;
     }
 
-    public void onRowCreated(Row r) {
+    @Override
+    public void onRowCreated(UUID senderId, Row r) {
+        // !!! Assumes that the sender/receiver ID is the first column of the row
+        UUID recipientId = UUID.fromString(r.data.get(0));
+        r.data.set(0, senderId.toString());
+        dataAccess.writeRow("inbox", recipientId, new Row(r.data));
     }
 
-    public void onRowModified(Row r) {
+    @Override
+    public void onRowModified(UUID userId, Row r) {
+        // with a little extra bookkeeping we could support editing messages here
     }
 
-    public void onRowDeleted(Row r) {
+    @Override
+    public void onRowDeleted(UUID userId, Row r) {
     }
 }

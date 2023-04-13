@@ -1,6 +1,7 @@
 package com.lightspeed.unisync.core.model;
 
 import java.util.List;
+import java.util.Random;
 
 public class Row {
     public final int id;
@@ -18,5 +19,9 @@ public class Row {
 
     public Row(int id, List<String> data) {
         this(id, data, data.hashCode()); // Java's default hash is good enough for a prototype
+    }
+
+    public Row(List<String> data) {
+        this((new Random()).nextInt() % 0x3fff_ffff, data);
     }
 }

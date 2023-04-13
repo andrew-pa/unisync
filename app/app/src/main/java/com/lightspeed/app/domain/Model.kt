@@ -20,7 +20,7 @@ data class Contact(val localId: Int, val name: String, val color: String, val us
                 Data.db().query("contacts", arrayOf("name", "color", "userId", "rowId"))
             ) {
                 Contact(
-                    it.getInt(4),
+                    it.getInt(3),
                     it.getString(0),
                     it.getString(1),
                     UUID.fromString(it.getString(2))
@@ -63,7 +63,7 @@ data class Message(val id: Int, val contents: String, val mimeType: String, val 
                     arrayOf(otherId.toString(), otherId.toString())
                 )
             ) {
-                Message(it.getInt(0), it.getString(1), it.getString(2), it.getLong(4))
+                Message(it.getInt(0), it.getString(1), it.getString(2), it.getLong(3))
             }
 
         fun sendMessage(msg: Message, receiverId: UUID) {

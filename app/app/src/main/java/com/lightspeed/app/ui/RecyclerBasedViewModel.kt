@@ -1,6 +1,7 @@
 package com.lightspeed.app.ui
 
 import android.graphics.Color
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.lightspeed.app.domain.Contact
@@ -16,24 +17,58 @@ class RecyclerBasedViewModel(
 
     private val stateFlow = MutableStateFlow(
         State(
-            contactList = emptyList()
+            loading = true,
+            contactList = emptyList(),
         )
     )
     val viewStateFlow: Flow<ViewState> = stateFlow.map { it.toViewState() }
+    val command = MutableLiveData<Command>()
 
     fun loadContacts() {
-        stateFlow.update { it.copy(contactList = Contact.getContacts()) }
+        stateFlow.update { it.copy(loading = true) }
+        stateFlow.update { it.copy(contactList = Contact.getContacts(), loading = false) }
     }
 
     fun addContact(newContact: NewContact) {
-        val contact = Contact(localId = 1, name = newContact.name, color = newContact.color, userId = UUID.randomUUID())
-        Contact.addContact(contact)
-        val list = Contact.getContacts()
-//        val list = stateFlow.value.contactList + contact
-        stateFlow.update { it.copy(contactList = list) }
+        Contact.addContact(
+            Contact(
+                localId = 1,
+                name = newContact.name,
+                color = newContact.color,
+                userId = UUID.randomUUID()
+            )
+        )
+        stateFlow.update { it.copy(contactList = Contact.getContacts()) }
+    }
+
+    fun deleteContact(contact: Row.Contact) {
+        Contact.deleteContact(contact.id)
+        stateFlow.update { it.copy(contactList = Contact.getContacts()) }
+    }
+
+    fun editContactTapped(contact: Row.Contact) {
+        stateFlow.value.contactList.firstOrNull { it.localId == contact.id }?.let {
+            command.postValue(Command.EditContactCommand(it))
+        }
+    }
+
+    fun updateContact(contact: NewContact) {
+        contact.id?.let { id ->
+            Contact.deleteContact(id)
+            Contact.addContact(
+                Contact(
+                    localId = 1,
+                    name = contact.name,
+                    color = contact.color,
+                    userId = UUID.randomUUID()
+                )
+            )
+            stateFlow.update { it.copy(contactList = Contact.getContacts()) }
+        }
     }
 
     data class State(
+        val loading: Boolean,
         val contactList: List<Contact>
     ) {
         private fun String.toColor() = when (this) {
@@ -49,6 +84,7 @@ class RecyclerBasedViewModel(
             loading = contactList.isEmpty(),
             adapterList = contactList.map {
                 Row.Contact(
+                    id = it.localId,
                     name = it.name,
                     color = it.color.toColor(),
                 )
@@ -61,3 +97,9 @@ data class ViewState(
     val loading: Boolean,
     val adapterList: List<Row>,
 )
+
+sealed class Command {
+    data class EditContactCommand(
+        val contact: Contact
+    ) : Command()
+}

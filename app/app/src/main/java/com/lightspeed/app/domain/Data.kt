@@ -14,7 +14,7 @@ object Data {
         db = SyncClient(
             context = context,
             userName = "test-user-1",
-            syncUrl = "https://xq29h3le72.execute-api.us-west-2.amazonaws.com/dev/sync",
+            syncUrl = "https://mlkdkdp02h.execute-api.us-west-2.amazonaws.com/dev/sync ",
             schema = Schema(
                 1, mapOf(
                     Pair(

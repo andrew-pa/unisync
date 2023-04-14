@@ -23,16 +23,22 @@ class CreateContactFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        args.request.contact?.let {
+            binding.firstNameEditText.setText(it.firstName)
+            binding.lastNameEditText.setText(it.lastName)
+            binding.colorEditText.setText(it.color)
+        }
 
-        binding.saveContactButton.setOnClickListener { _ ->
+        binding.saveContactButton.setOnClickListener {
             val contact = NewContact(
+                id = args.request.contact?.id,
                 name = listOfNotNull(
                     binding.firstNameEditText.text,
                     binding.lastNameEditText.text,
                 ).joinToString(" "),
                 color = binding.colorEditText.text.toString()
             )
-            setFragmentResult(args.requestKey, contact.toExtras())
+            setFragmentResult(args.request.key, contact.toExtras())
             findNavController().apply {
                 popBackStack()
             }

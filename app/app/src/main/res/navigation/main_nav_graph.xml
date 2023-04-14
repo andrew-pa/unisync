@@ -24,10 +24,8 @@
         tools:layout="@layout/create_contact_fragment">
 
         <argument
-            android:name="requestKey"
-            app:argType="string" />
+            android:name="request"
+            app:argType="com.lightspeed.app.ui.ContactSheetRequest" />
 
     </dialog>
-
-
 </navigation>

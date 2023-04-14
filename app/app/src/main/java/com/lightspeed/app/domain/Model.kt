@@ -2,22 +2,37 @@ package com.lightspeed.app.domain
 
 import android.content.ContentValues
 import android.database.Cursor
+import android.os.Parcelable
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
 import java.util.*
 
-fun <T> collectCursor(c: Cursor, f: (Cursor) -> T): List<T> {
+fun <T: Sortable> collectCursor(c: Cursor, sort: Boolean = false, f: (Cursor) -> T): List<T> {
     val l = ArrayList<T>()
     while (!c.isAfterLast) {
         l.add(f(c))
         c.moveToNext()
     }
+    if (sort) l.sortBy { it.sortBy }
     return l
 }
 
-data class Contact(val localId: Int, val name: String, val color: String, val userId: UUID) {
+interface Sortable {
+    val sortBy: String
+}
+
+@Parcelize
+data class Contact(val localId: Int, val name: String, val color: String, val userId: UUID) :
+    Parcelable, Sortable {
+
+    @IgnoredOnParcel
+    override val sortBy = name
+
     companion object {
         fun getContacts(): List<Contact> =
             collectCursor(
-                Data.db().query("contacts", arrayOf("name", "color", "userId", "rowId"))
+                c = Data.db().query("contacts", arrayOf("name", "color", "userId", "rowId")),
+                sort = true,
             ) {
                 Contact(
                     it.getInt(3),
@@ -37,11 +52,11 @@ data class Contact(val localId: Int, val name: String, val color: String, val us
             Data.db().insert("contacts", values)
         }
 
-        fun deleteContact(contact: Contact) {
+        fun deleteContact(localId: Int) {
             Data.db().delete(
                 "contacts",
                 "rowId = ?",
-                arrayOf(contact.localId.toString())
+                arrayOf(localId.toString())
             )
         }
 
@@ -51,7 +66,9 @@ data class Contact(val localId: Int, val name: String, val color: String, val us
     }
 }
 
-data class Message(val id: Int, val contents: String, val mimeType: String, val timestamp: Long) {
+data class Message(val id: Int, val contents: String, val mimeType: String, val timestamp: Long) : Sortable {
+    override val sortBy = ""
+
     constructor(contents: String) : this(-1, contents, "text/plain", System.currentTimeMillis())
 
     companion object {

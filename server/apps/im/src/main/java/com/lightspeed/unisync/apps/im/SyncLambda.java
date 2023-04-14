@@ -15,7 +15,7 @@ import java.util.Optional;
 public class SyncLambda extends AbstractSyncLambda {
     @Override
     protected SyncService createService() {
-        DataAccess data = new DynamoDataAccess(Region.US_EAST_1);
+        DataAccess data = new DynamoDataAccess(Region.US_WEST_2);
         return new SyncService(data,
                 Optional::of, // pass through session IDs as user IDs
                 Map.of("contacts", new Table("contacts", new LastWriterWinsConflictResolver(), new TrivialValidator(), null),

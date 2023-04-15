@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -21,6 +23,7 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.concurrent.thread
+import kotlin.random.Random
 
 class SyncClient(
     context: Context,
@@ -33,6 +36,19 @@ class SyncClient(
         install(ContentNegotiation) {
             json()
         }
+    }
+
+    private val observers = HashMap<String, HashMap<Int, ()->Unit>>()
+    private var nextToken = 7
+
+    fun registerObserver(tableName: String, observer: ()->Unit): Int {
+        val token = nextToken ++
+        observers.getOrElse(tableName, {HashMap()}).put(token, observer)
+        return token
+    }
+
+    fun unregisterObserver(tableName: String, observerToken: Int) {
+        observers[tableName]?.remove(observerToken)
     }
 
     init {
@@ -48,7 +64,7 @@ class SyncClient(
         var timeToWait = 50L
         while (true) {
             if (syncTables()) {
-                timeToWait = 50L;
+                timeToWait = 50L
             } else {
                 timeToWait = min(timeToWait * 2, 5000L)
             }
@@ -67,6 +83,7 @@ class SyncClient(
             null,
             null
         ).use {
+            it.moveToFirst()
             while (!it.isAfterLast) {
                 rows[it.getInt(0)] = it.getLong(1)
                 it.moveToNext()
@@ -92,6 +109,7 @@ class SyncClient(
                         null,
                         null
                     ).use {
+                        it.moveToFirst()
                         while (!it.isAfterLast) {
                             newRows.add(Row(it))
                             it.moveToNext()
@@ -136,7 +154,18 @@ class SyncClient(
                     db.writableDatabase.delete("status$tableName", null, null)
                     db.writableDatabase.execSQL("INSERT INTO status$tableName SELECT rowId, dataHash FROM $tableName")
                     // sync again soon if anything changed on the server or the client
-                    result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    val changed = result.deletedRows.isNotEmpty() || result.newOrModifiedRows.isNotEmpty() || (currentRows.size - previousRows.size != 0)
+                    if(changed && observers.containsKey(tableName)) {
+                        val obs = observers[tableName]
+                        if(obs!!.isNotEmpty()) {
+                            Handler(Looper.getMainLooper()).post {
+                                obs.forEach {
+                                    it.value()
+                                }
+                            }
+                        }
+                    }
+                    changed
                 }
             }.fold(false) { acc, job -> acc || job.await() }
         }
@@ -167,25 +196,31 @@ class SyncClient(
         kotlin.random.Random.nextInt(0x3fff_ffff)
 
 
-    private fun computeDataHash(values: ContentValues): String =
-        BigInteger(1, values.keySet().fold(MessageDigest.getInstance("MD5")) { h, s ->
-            h.update(s.toByteArray())
-            h
-        }.digest()).toString(Character.MAX_RADIX)
-
+    private fun computeDataHash(table: String, values: ContentValues): Long {
+        val sc = schema.tables[table]!!
+        val rowVals = sc.columns.map {
+            val columnName = it.first
+            values.getAsString(columnName)
+        }
+        return rowVals.hashCode().toLong()
+    }
     fun insert(table: String, values: ContentValues): Long {
         // TODO: bother to notify the sync system that this table has changed?
         values.put("rowId", newRowId())
-        values.put("dataHash", computeDataHash(values))
+        values.put("dataHash", computeDataHash(table, values))
         values.put("_modified", false)
         return db.writableDatabase.insert(table, null, values)
     }
 
     fun update(table: String, values: ContentValues, where: String, args: Array<String>): Int {
         // TODO: bother to notify the sync system that this table has changed?
-        values.put("dataHash", computeDataHash(values))
+        values.put("dataHash", computeDataHash(table, values))
         values.put("_modified", true)
         return db.writableDatabase.update(table, values, where, args)
+    }
+
+    fun delete(table: String, where: String, args: Array<String>) {
+        db.writableDatabase.delete(table, where, args)
     }
 
     // TODO: transactions
@@ -199,7 +234,7 @@ class SyncClient(
         orderBy: String? = null,
         limit: String? = null
     ): Cursor {
-        return db.readableDatabase.query(
+        val c = db.readableDatabase.query(
             table,
             columns,
             selection,
@@ -208,5 +243,9 @@ class SyncClient(
             orderBy,
             limit
         )
+        c.moveToFirst()
+        return c
     }
+
+    fun raw() = db.readableDatabase
 }

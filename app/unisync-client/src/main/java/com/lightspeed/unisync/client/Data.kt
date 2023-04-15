@@ -22,10 +22,10 @@ object UUIDSerializer : KSerializer<UUID> {
 }
 
 @Serializable
-data class Row(val id: Int, val dataHash: String, val data: List<String>) {
+data class Row(val id: Int, val dataHash: Long, val data: List<String>) {
     constructor(dbRow: Cursor) : this(
         dbRow.getInt(0),
-        dbRow.getString(1),
+        dbRow.getLong(1),
         List(dbRow.columnCount - 3) { dbRow.getString(it + 3) })
 }
 
